@@ -1,4 +1,4 @@
-const CACHE='music-lab-alpha-v4-voice';
+const CACHE='music-lab-alpha-v4-1-easy-ui';
 const piano=[...Array.from({length:21},(_,i)=>36+3*i),99,102].map(n=>`./assets/piano/${n}.mp3`);
 const ASSETS=['./','./index.html','./src/app.js','./src/music.js','./src/audio.js','./src/mic.js','./src/style.css','./src/staff.js','./src/midi.js','./src/larynx3d.js','./src/recorder.js','./src/vocal-content.js','./src/voice-metrics.js','./assets/treble-clef.svg','./assets/bass-clef.svg','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png','./manifest.webmanifest',...piano];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
