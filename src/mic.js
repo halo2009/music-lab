@@ -25,8 +25,8 @@ export async function startMicrophone(onFrame){
  const ctx=new (window.AudioContext||window.webkitAudioContext)();
  try{
   await ctx.resume();const source=ctx.createMediaStreamSource(stream);const analyser=ctx.createAnalyser();
-  analyser.fftSize=4096;source.connect(analyser);const data=new Float32Array(analyser.fftSize);let raf=0,last=0;
-  const tick=ts=>{if(ts-last>85){last=ts;analyser.getFloatTimeDomainData(data);onFrame(estimatePitch(data,ctx.sampleRate),data);}raf=requestAnimationFrame(tick)};
+  analyser.fftSize=4096;source.connect(analyser);const data=new Float32Array(analyser.fftSize),spectrum=new Float32Array(analyser.frequencyBinCount);let raf=0,last=0;
+  const tick=ts=>{if(ts-last>85){last=ts;analyser.getFloatTimeDomainData(data);analyser.getFloatFrequencyData(spectrum);onFrame(estimatePitch(data,ctx.sampleRate),data,{spectrum,sampleRate:ctx.sampleRate});}raf=requestAnimationFrame(tick)};
   raf=requestAnimationFrame(tick);
   return ()=>{cancelAnimationFrame(raf);source.disconnect();stream.getTracks().forEach(t=>t.stop());ctx.close()};
  }catch(e){stream.getTracks().forEach(t=>t.stop());ctx.close();throw e}

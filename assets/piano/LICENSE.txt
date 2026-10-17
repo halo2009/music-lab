@@ -1,0 +1,14 @@
+Music Lab Alpha 0.3 acoustic piano sound samples
+
+Source soundfont: TimGM6mb.sf2, by Tim Brechbill (2004) and David Bolton (2010).
+License: GNU General Public License version 2 (GPL-2.0).
+Samples in this folder are rendered audio derivatives of the acoustic grand piano
+program (program 0) from TimGM6mb.sf2 using FluidSynth.
+These piano sample assets are provided under GPL-2.0.
+For original editable soundfont/source, see:
+https://packages.debian.org/timgm6mb-soundfont
+https://github.com/musescore/musescore-old/commit/90c33ef9d87b3f5ff92efd3b07d89eb455fb1fef
+
+This copyright notice applies to the bundled piano recordings. It is not an
+assertion that the app's original JavaScript automatically inherits this license.
+A full copy of the GPL version 2 is included as LICENSE-GPL-2.0.txt.
