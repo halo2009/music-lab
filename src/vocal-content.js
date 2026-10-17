@@ -1,0 +1,20 @@
+// Evidence-annotated educational content. Claims about vocal-fold behavior are NOT inferred from microphones.
+export const VOICE_LESSONS = [
+ {id:'air',category:'생리학',title:'호기 기류와 성문하 압력',summary:'폐에서 나온 공기는 후두의 성대 진동을 구동한다.',points:['호흡계는 발성을 위한 공기 흐름과 압력 차를 만든다.','성대는 능동적으로 빠르게 벌어졌다 닫히는 것이 아니라 조직의 탄성과 공기역학적 상호작용으로 진동한다.','소리를 크게 내는 일과 무조건 힘을 강하게 주는 일은 다르다.'],source:'NIDCD',url:'https://www.nidcd.nih.gov/news/multimedia/how-does-human-body-produce-voice-and-speech-text-version'},
+ {id:'fold',category:'생리학',title:'성대의 진동과 점막파',summary:'성대 조직의 주기적인 운동이 기본 주파수와 배음을 가진 음원을 만든다.',points:['한 번의 진동 주기는 성문 개방과 폐쇄가 반복되는 과정이다.','성대의 수직 방향 조직 운동은 간단한 2D 선 하나로 완전히 설명할 수 없다.','앱의 성대 애니메이션은 실제 초고속 성대 촬영이 아닌 느린 개념 모형이다.'],source:'NIDCD',url:'https://www.nidcd.nih.gov/health/taking-care-your-voice'},
+ {id:'sourcefilter',category:'음향학',title:'음원–필터 이론',summary:'성대가 음원을 만들고 성도는 특정 주파수 에너지를 강화하거나 약화한다.',points:['F0는 주기적인 음원의 기본 주파수이고, 배음은 그 정수배 성분이다.','포먼트는 성도 공명의 특징적인 주파수 대역으로 모음 지각에 중요한 영향을 준다.','성문 음원과 성도 필터는 실제 발성에서 완전히 독립적인 장치처럼 동작하는 것은 아니다.'],source:'NIDCD',url:'https://www.nidcd.nih.gov/health/taking-care-your-voice'},
+ {id:'register',category:'발성 기전',title:'M1·M2와 진성·가성',summary:'후두 진동 기전과 가창 교육에서 쓰는 레지스터 이름을 구분한다.',points:['EGG를 이용한 연구에서 M0부터 M3까지 네 종류의 후두 진동 기전이 논의된다.','M1과 M2의 구분은 음색이 무거운지 또는 높은 음인지로만 판정할 수 없다.','두성 및 믹스보이스라는 말은 하나의 성문 모양을 가리키는 통일된 의학 용어가 아니다.'],source:'Roubeau et al. (2009)',url:'https://pubmed.ncbi.nlm.nih.gov/18538982/'},
+ {id:'muscle',category:'해부학',title:'후두 근육과 성대 조절',summary:'윤상갑상근 CT와 갑상피열근 TA를 포함한 근육의 협응을 이해한다.',points:['CT는 후두의 관절 운동을 통해 성대 길이·장력 조절에 관여한다.','TA는 성대 내부 조직의 기계적 특성과 조절에 관여한다.','CT 하나가 두성을 만들고 TA 하나가 진성을 만든다는 식의 일대일 대응은 부정확하다.'],source:'NIDCD / Roubeau et al.',url:'https://pubmed.ncbi.nlm.nih.gov/18538982/'},
+ {id:'vowels',category:'성도 공명',title:'혀·입술·턱과 모음',summary:'성도의 형태 변화가 음색과 모음 구별에 영향을 준다.',points:['혀의 앞뒤 및 높이, 입술 모음, 턱 열림 등이 성도의 공명에 영향을 준다.','개인의 해부학, 음높이, 발성 방식에 따라 실제 포먼트가 달라진다.','앱에서 표시하는 F1·F2·F3 값은 교육용 반응 모델의 계산값이며 측정값이 아니다.'],source:'NIDCD',url:'https://www.nidcd.nih.gov/news/multimedia/how-does-human-body-produce-voice-and-speech-text-version'},
+ {id:'acoustic',category:'측정',title:'마이크로 알 수 있는 것과 없는 것',summary:'음높이·주파수 스펙트럼과 성대 접촉 상태의 차이를 구분한다.',points:['마이크로 F0, 음높이 변동, 주파수 에너지 분포 등의 음향 특성을 관찰할 수 있다.','녹음한 소리만으로 성대가 닫히는 정도나 M1/M2를 확정할 수 없다.','소리 크기·스펙트럼 수치는 마이크 위치와 장치 설정에 영향을 받는다.'],source:'ASHA',url:'https://www.asha.org/practice-portal/clinical-topics/voice-disorders'},
+ {id:'sensations',category:'보컬 교육',title:'“앞으로 보내라”와 “머리에서 울린다”',summary:'몸에서 느끼는 감각을 실제 음원 위치와 혼동하지 않는다.',points:['얼굴이나 가슴에서 느껴지는 진동은 감각 정보이지만 성대 발성 기전을 직접 표시하지 않는다.','노래 선생님의 비유가 연습에 도움이 될 수 있어도 일관된 인체 측정값을 뜻하는 것은 아니다.','자신의 감각, 녹음된 소리, 배운 원리를 별도로 기록하면 레슨 복습에 유용하다.'],source:'NIDCD / ASHA',url:'https://www.nidcd.nih.gov/health/taking-care-your-voice'}
+];
+export const VOICE_QUIZ=[
+ {q:'기본 주파수 F0는 무엇을 나타내나요?',answers:['성문에서 만들어지는 주기적 진동의 기본 주파수','연구개의 길이','마이크의 감도'],correct:0,why:'F0는 음원 진동의 기본 주파수와 관계가 있으며 음높이 지각에 중요합니다.'},
+ {q:'마이크만으로 정확히 판정하기 어려운 것은?',answers:['음높이 변화','스펙트럼 중심','성대의 실제 접촉 양상'],correct:2,why:'성대 운동을 직접 관찰하려면 후두 영상이나 전기성문파형검사(EGG) 같은 추가 측정이 필요할 수 있습니다.'},
+ {q:'포먼트 F1·F2는 주로 무엇과 관련되나요?',answers:['피아노 건반 수','성도 공명과 모음 구별','호흡 횟수'],correct:1,why:'F1·F2는 성도의 형태와 공명 특성을 반영하는 주요 포먼트입니다.'},
+ {q:'“두성”의 과학적 설명으로 적절한 것은?',answers:['언제나 M2와 완전히 같다','별도의 머리 성대에서 만들어진다','교육적 정의가 다양해 특정 기전과 1:1 대응하지 않는다'],correct:2,why:'두성은 교육적 정의가 다양한 용어입니다. 머리가 울리는 감각은 실제 음원의 발생 위치가 아닙니다.'},
+ {q:'윤상갑상근(CT)과 갑상피열근(TA)에 대해 적절한 것은?',answers:['각각 독립적으로 두성과 진성을 만든다','여러 근육이 협응해 성대의 기계적 특성을 조절한다','둘 다 소리의 주파수와 무관하다'],correct:1,why:'CT와 TA는 여러 후두 근육 중 일부이며 복합적인 발성 조절에 관여합니다.'},
+ {q:'앱의 발성 합성음은 어떤 용도로 가장 적합한가요?',answers:['실제 사람의 성대 상태 진단','성대 음원과 성도 공명의 개념 비교','사용자의 건강 상태 확정'],correct:1,why:'합성음은 특정 변수의 변화를 이해하기 위한 교육용 예시입니다.'}
+];
+export const VOWEL_PRESETS={a:{label:'아 /a/ · 개방모음 예시',jaw:84,tongue:38,lips:12},e:{label:'에 /e/ · 앞모음 예시',jaw:43,tongue:82,lips:14},i:{label:'이 /i/ · 고모음 예시',jaw:18,tongue:95,lips:12},o:{label:'오 /o/ · 원순모음 예시',jaw:47,tongue:35,lips:78},u:{label:'우 /u/ · 원순고모음 예시',jaw:19,tongue:18,lips:97}};

@@ -26,3 +26,6 @@ export async function toggleRecord(slot,onChange){
  recorder.start();if(callback)callback();
 }
 export function clearClips(){if(activeSlot)recorder?.stop();for(const v of Object.values(clips))if(v?.url)URL.revokeObjectURL(v.url);clips.A=null;clips.B=null;}
+
+export function stopRecording(){if(activeSlot&&recorder?.state==='recording'){recorder.stop();return true}return false;}
+export function clipDownloadName(slot){const type=clips[slot]?.blob?.type||'';const ext=type.includes('mp4')||type.includes('aac')?'m4a':'webm';return `musiclab-take-${slot}.${ext}`;}

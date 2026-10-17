@@ -79,3 +79,44 @@
 .voice-live-panel{margin:17px 0}
 #larynx-canvas{aspect-ratio:480/305;max-height:340px;background:#15202d}
 @media(max-width:700px){.piano-indicator{display:none}.formant-values span{flex:1;min-width:0;padding:9px 6px;font-size:10px}.formant-values strong{display:block;margin:3px 0 0;font-size:12px}}
+/* Music Lab Alpha 0.4: evidence-based Voice Science, voice acoustics and observation workflows. */
+.voice-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}
+.voice-tab{text-align:left;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 17px;color:var(--text);min-width:0;display:flex;flex-direction:column;gap:6px;transition:border-color .16s,background .16s}
+.voice-tab strong{font-size:15px;font-weight:700}.voice-tab span{font-size:12px;color:var(--muted);line-height:1.5}
+.voice-tab.on{border:1px solid var(--accent);background:var(--accent-dim)}
+.voice-tab:focus-visible,.lesson-topic:focus-visible,.voice-quiz-answers button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.voice-section-marker{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin:17px 0 14px;color:var(--muted);font-size:12px}
+.voice-view-controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.voice-lesson{margin:14px 0}.lesson-layout{display:grid;grid-template-columns:minmax(155px,.7fr) minmax(0,1.5fr);gap:18px;margin-top:14px}
+.lesson-topics{display:grid;grid-template-columns:1fr;gap:6px;align-content:start}
+.lesson-topic{border:1px solid var(--line);color:var(--text);border-radius:9px;background:var(--card2);text-align:left;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:5px;line-height:1.4}
+.lesson-topic small{font-size:10px;color:var(--muted)}.lesson-topic strong{font-size:12px;font-weight:600}.lesson-topic.selected{border-color:var(--accent);background:var(--accent-dim)}
+.lesson-article{border:1px solid var(--line);border-radius:13px;background:var(--card2);padding:20px;min-width:0}.lesson-article h3{font-size:20px;margin:15px 0 9px}.lesson-article>p{line-height:1.72;color:var(--muted);font-size:13px;margin-bottom:16px}
+.lesson-points{border-top:1px solid var(--line);padding-top:7px}.lesson-points>div{display:flex;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;align-items:start}
+.lesson-points>div span{color:var(--accent);font-weight:700;font-size:11px;min-width:22px}.lesson-points p{margin:0;line-height:1.75;font-size:13px;color:var(--text)}
+.research-link{display:inline-block;margin-top:17px;font-size:12px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.voice-reg-comparison{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(190px,.7fr);gap:22px;align-items:center;margin-top:17px}
+.voice-reg-comparison h3{margin:15px 0 10px;font-size:19px}.voice-reg-comparison p{color:var(--muted);line-height:1.7;font-size:13px}
+.voice-register-figure{max-width:270px;margin:0 auto;text-align:center}.voice-register-figure>small{color:var(--muted);font-size:11px}
+.voice-register-figure .folds-schematic{margin-bottom:8px}.voice-register-figure .folds-schematic svg{width:100%}
+.voice-quiz-question{font-size:17px;font-weight:700;line-height:1.6;margin:18px 0 13px}.voice-quiz-answers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.voice-quiz-answers .answer{padding:17px 11px;min-height:65px;font-size:13px;line-height:1.6}
+.voice-quiz-explain{background:var(--card2);border:1px solid var(--line);padding:14px;border-radius:10px;font-size:13px;line-height:1.8;margin:13px 0}
+.voice-preset-row{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0 10px}.voice-preset-row .chip{min-height:37px}
+.voice-process{display:grid;gap:13px;margin:18px 0}.voice-process>div{position:relative;border-left:2px solid var(--accent);padding:3px 0 5px 15px;display:grid;grid-template-columns:31px minmax(0,1fr);gap:0 10px}
+.voice-process span{color:var(--accent);font-size:12px;font-weight:700;grid-row:span 2}.voice-process b{color:var(--text);font-size:14px}.voice-process p{margin:7px 0 0;font-size:12px;line-height:1.65;color:var(--muted)}
+.voice-audio-pair{display:flex;gap:9px;flex-wrap:wrap}.voice-audio-pair .btn{flex:1;min-width:155px;justify-content:center}
+.vocal-guidance{border:1px solid var(--line);background:var(--card2);border-radius:11px;padding:16px;margin:17px 0;font-size:12px;line-height:1.7}
+.vocal-guidance b,.vocal-guidance strong{color:var(--text);display:block;font-size:13px;margin-top:8px}.vocal-guidance b:first-child,.vocal-guidance strong:first-child{margin-top:0}
+.vocal-guidance p{color:var(--muted);line-height:1.7;margin:6px 0}
+.voice-check-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:17px}.voice-check-grid>article{background:var(--card2);border:1px solid var(--line);padding:16px;border-radius:11px;min-width:0}.voice-check-grid b{font-size:13px;color:var(--text)}.voice-check-grid p{margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.7}
+.voice-measures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}.voice-measures>div{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:15px 13px;min-width:0;display:flex;flex-direction:column;gap:7px}
+.voice-measures span{color:var(--muted);font-size:11px}.voice-measures strong{color:var(--text);font-size:24px;letter-spacing:-.04em;overflow-wrap:anywhere}.voice-measures small{color:var(--muted);font-size:10px;line-height:1.4}
+.voice-acoustic-text{border-left:3px solid var(--accent);background:var(--card2);padding:15px;border-radius:8px;font-size:12px;line-height:1.8;margin:14px 0 17px;min-height:66px}
+.voice-target-select{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:12px;margin:16px 0}.voice-target-select select{width:100%;border:1px solid var(--line);border-radius:10px;color:var(--text);background:var(--card2);padding:13px;font-size:16px;min-height:48px}
+.record-download{display:flex;align-items:center;justify-content:center;text-decoration:none;text-align:center;min-height:38px;font-size:11px}
+.voice-note-label{display:block;font-size:13px;line-height:1.65;color:var(--muted);margin:15px 0 10px}
+#voice-observation{border:1px solid var(--line);border-radius:11px;background:var(--card2);color:var(--text);font:inherit;font-size:13px;line-height:1.6;padding:15px;width:100%;resize:vertical;min-height:140px}
+.voice-note-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px}.voice-note-actions span{font-size:12px;color:var(--muted)}
+@media(max-width:900px){.lesson-layout{grid-template-columns:1fr}.lesson-topics{grid-template-columns:repeat(2,minmax(0,1fr))}.voice-check-grid{grid-template-columns:1fr}.voice-reg-comparison{grid-template-columns:1fr}.voice-quiz-answers{grid-template-columns:1fr}}
+@media(max-width:700px){.voice-tabs{gap:7px}.voice-tab{padding:11px 9px;border-radius:9px}.voice-tab strong{font-size:11px}.voice-tab span{font-size:10px;line-height:1.3}.voice-section-marker{font-size:11px}.lesson-layout{gap:10px}.lesson-article{padding:15px}.lesson-topics{grid-template-columns:repeat(2,minmax(0,1fr))}.voice-measures strong{font-size:20px}.voice-reg-comparison{gap:8px}.voice-preset-row .chip{padding:8px 12px}.voice-quiz-answers .answer{min-height:54px}}
+@media(max-width:360px){.voice-tab span{display:none}.voice-tab strong{font-size:10px}.lesson-topics{grid-template-columns:1fr}}

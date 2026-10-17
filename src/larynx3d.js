@@ -7,14 +7,16 @@ function vec(x,y,z){return [x,y,z]}
 function normalize(v){const s=Math.hypot(...v)||1;return v.map(x=>x/s)}
 function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
 function sub(a,b){return a.map((x,i)=>x-b[i])}
-function paint(ctx,w,h,{yaw=20,pitch=42,openness=30,zoom=1,phase=0}){
+function paint(ctx,w,h,{yaw=20,pitch=42,openness=30,zoom=1,phase=0,focus='all'}){
  const a=clamp(yaw,-145,145)*Math.PI/180,b=clamp(pitch,5,86)*Math.PI/180;
  const cosA=Math.cos(a),sinA=Math.sin(a),cosB=Math.cos(b),sinB=Math.sin(b);
  const R=p=>{let x=p[0]*cosA+p[1]*sinA,y=-p[0]*sinA+p[1]*cosA,z=p[2];return [x,y*cosB-z*sinB,y*sinB+z*cosB]};
  const scale=clamp(zoom,.72,1.3)*95,light=normalize([-.35,-.65,1.3]);
  const project=p=>{const [x,y,z]=R(p);const perspective=3.4/(3.4-z*.24);return {x:w*.51+x*scale*perspective,y:h*.57+y*scale*perspective-z*9,z}};
  const shapes=[];
- function tri(p,q,r,color,alpha=1){const A=project(p),B=project(q),C=project(r);const n=normalize(cross(sub(q,p),sub(r,p)));let illum=.46+.54*Math.abs(n[0]*light[0]+n[1]*light[1]+n[2]*light[2]);
+ function tri(p,q,r,color,alpha=1){
+   const category=color===palette.fold||color==='#ffdce0'?'folds':color===palette.falseFold?'falseFold':color===palette.cartilage?'cartilage':color===palette.ary?'ary':'other';
+   if(focus!=='all' && category!==focus)alpha*=.22;const A=project(p),B=project(q),C=project(r);const n=normalize(cross(sub(q,p),sub(r,p)));let illum=.46+.54*Math.abs(n[0]*light[0]+n[1]*light[1]+n[2]*light[2]);
    shapes.push({pts:[A,B,C],depth:(A.z+B.z+C.z)/3,color,alpha,illum});}
  function quad(p,q,r,s,color,alpha=1){tri(p,q,r,color,alpha);tri(p,r,s,color,alpha)}
  function tube(start,end,r0,r1,color,sides=11){
@@ -77,6 +79,7 @@ function paint(ctx,w,h,{yaw=20,pitch=42,openness=30,zoom=1,phase=0}){
  ctx.font='10px sans-serif';ctx.fillStyle='#b5ced5';ctx.fillText('Vestibular folds · 성대 윗부분의 전정주름',15,h-31);
  ctx.fillText('교육용 구조 모형 · 실제 해부학 영상이 아님',15,h-15);
  ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(`회전 ${Math.round(yaw)}° / 기울기 ${Math.round(pitch)}°`,w-15,20);
+ ctx.textAlign='left';ctx.fillStyle='#b8dccc';ctx.fillText(`강조: ${{all:'전체',folds:'진성대',falseFold:'전정주름',cartilage:'후두 연골',ary:'피열연골'}[focus]||'전체'}`,15,37);
 }
 export function drawLarynx(canvas,opts={}){
  if(!canvas)return;const dpr=Math.min(2,window.devicePixelRatio||1),w=480,h=305;

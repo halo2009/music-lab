@@ -1,4 +1,4 @@
-# Music Lab — 종합 음악 학습 앱 Alpha 0.2
+# Music Lab — 종합 음악 학습 앱 Alpha 0.4
 
 macOS, iPad, iPhone을 지원하는 개인용 음악 이론·연습 웹앱. 기존 Alpha 0.1의 기능을 유지하고 악보 기반 청음, 피아노 음원, MIDI, 발성 설명 기능을 확장했습니다.
 
@@ -98,4 +98,41 @@ music-lab/
 
 **한계:** 발성 시뮬레이션은 의학용 해부학 3D 스캔이 아닌 교육용 메쉬, 합성 소리 역시 실제 사람의 진성·가성을 직접 측정한 자료가 아닙니다. 마이크만으로 M1/M2, 근육 사용, 성대 접촉을 결정하거나 건강 상태를 판정할 수 없습니다. 앱은 진단이나 실제 발성 지도 대체물이 아닙니다.
 
-**배포:** GitHub Pages에서 `main` / `(root)`를 배포 중이라면 새 버전의 압축을 풀어 프로젝트 폴더의 파일·하위 폴더를 같은 저장소에 업로드하면 됩니다. 앱은 `music-lab-alpha-v3-piano` 서비스 워커로 캐시를 갱신합니다. 예전 버전이 보일 때는 강력 새로고침을 진행하세요.
+**배포:** GitHub Pages에서 `main` / `(root)`를 배포 중이라면 새 버전의 압축을 풀어 프로젝트 폴더의 파일·하위 폴더를 같은 저장소에 업로드하면 됩니다. 앱은 `music-lab-alpha-v4-voice` 서비스 워커로 캐시를 갱신합니다. 예전 버전이 보일 때는 강력 새로고침을 진행하세요.
+
+
+## Alpha 0.4 (2026-10-18) — 보컬 연구실 정밀화
+
+기존 Alpha 0.3의 피아노 샘플 23종, 청음/악보/기타/화성학/작곡/백업 기능을 그대로 보존하고 **보컬** 페이지에 3개의 전환 탭을 추가했습니다.
+
+1. **보컬 과학:** 성도 측면 단면도 및 회전 가능한 교육용 3D 후두 메쉬. 구조 강조(성대·전정주름·후두 연골·피열연골), 성문 개폐와 느린 애니메이션. M1/M2/두성/믹스 용어의 과학적 차이. 자료별 연구 근거를 포함한 8개 주제 학습 자료와 6개 퀴즈.
+2. **음색 실험실:** 모음 프리셋 /a e i o u/ 개념도, 턱·혀·입술·F0·기식소음 조절, F1/F2/F3 필터 반응 그래프, 합성음 청취 및 개념 비교. 이 F값과 합성 소리는 교육용 계산값으로 실측 포먼트나 특정 실제 사람의 목소리가 아닙니다.
+3. **목소리 분석·연습:** 마이크 입력의 실시간 주파수/목표음 편차/보정되지 않은 dBFS/스펙트럼 중심/주파수 스펙트럼 관찰, 실제 피아노 기준음 듣기, 녹음 테이크 A/B 청취·파일 다운로드, 보컬 관찰 메모 기기별 저장.
+
+### 본 버전의 과학적 정확도와 한계
+
+- 일반 마이크만으로 실제 성대의 모양·성문 접촉·후두 근육 사용량·M1/M2를 확정하거나 음성 질환을 진단할 수 없습니다.
+- 현재 3D는 해부학 교육용 메시 모델이며 MRI·CT·후두 내시경 스캔이 아닙니다. 정확한 물리 기반 3D 움직임·전문 음성 합성·실측 포먼트 추정·의료 분석 도구가 아닙니다.
+- 스펙트럼 중심과 입력 레벨은 마이크 설정·위치·주변 소음의 영향을 받습니다. 단순 규칙에 따른 음향 설명은 검증된 발성 유형 분류가 아닙니다.
+- 음성 데이터는 외부 서버로 전송하지 않습니다. 녹음파일은 브라우저 메모리 내에서만 유지되므로 **새로고침 전에 다운로드**하세요. 관찰 메모는 해당 기기의 localStorage에 저장됩니다.
+- 앱에 표기된 발성 연습은 편안한 범위에서 진행하도록 권장합니다. 목에 통증·어지러움·호흡 불편이 나타나면 멈추세요.
+
+### 새 파일
+
+- `src/vocal-content.js`: 검증 가능한 근거와 단원·이해도 퀴즈, 모음 컨트롤 프리셋.
+- `src/voice-metrics.js`: 브라우저 마이크의 RMS/dBFS, 스펙트럼 중심, 피치 변동폭 등 비진단적 음향 특징 계산.
+- `src/app.js` 및 `src/style.css`: 보컬 3개 탭의 UI와 이벤트, 음향 지표, A/B 녹음, 관찰 노트.
+- `src/larynx3d.js`: 구조별 강조 보기.
+
+### 근거 문헌
+
+- NIDCD, *Taking Care of Your Voice*: https://www.nidcd.nih.gov/health/taking-care-your-voice
+- NIDCD, *How Does the Human Body Produce Voice and Speech?*: https://www.nidcd.nih.gov/news/multimedia/how-does-human-body-produce-voice-and-speech-text-version
+- Roubeau, Henrich & Castellengo (2009), *Laryngeal vibratory mechanisms*: https://pubmed.ncbi.nlm.nih.gov/18538982/
+- ASHA, *Voice Disorders — Acoustic Assessment*: https://www.asha.org/practice-portal/clinical-topics/voice-disorders
+
+### 업데이트 방법
+
+기존 저장소에 압축파일 자체가 아닌 `music-lab` 폴더 내 전체 파일을 업로드하세요. 특히 `src/vocal-content.js`, `src/voice-metrics.js`, `src/app.js`, `src/style.css`, `src/larynx3d.js`, `sw.js`, `index.html`이 업로드되었는지 확인하세요. `.github/workflows/deploy.yml`이 이미 있다면 GitHub Pages에 다시 게시됩니다.
+
+오래된 버전이 계속 보이면 `https://halo2009.github.io/music-lab/?v=0.4`에서 강력 새로고침하세요. 앱 내 데이터는 브라우저/기기별로 관리되며 GitHub와 자동 동기화하지 않습니다.
