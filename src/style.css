@@ -173,3 +173,65 @@
 .voice-target-buttons .btn {min-width:0;white-space:normal;justify-content:center;}
 @media (max-width:680px){.voice-path-flow{grid-template-columns:repeat(2,minmax(0,1fr));}.voice-path-explain{grid-template-columns:1fr;padding:14px;gap:6px}.voice-path-illustration{max-width:280px;}.voice-target-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.voice-target-buttons .btn.primary{grid-column:1 / -1;grid-row:1}}
 @media (prefers-reduced-motion: reduce) {.voice-pitch-pointer{transition:none;}}
+
+/* Alpha 0.6 — guitar sight reading, movable chord grips, and rhythm studio */
+.guitar-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0 20px}
+.guitar-nav-tab{border:1px solid var(--line);border-radius:11px;padding:13px 6px;min-height:48px;font-size:13px;line-height:1.4;background:var(--card);color:var(--muted);font-weight:700;cursor:pointer}
+.guitar-nav-tab.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.guitar-help{font-size:13px;line-height:1.85;color:var(--muted);margin:8px 0 15px}
+.guitar-study-start .panel-head{margin-bottom:7px}
+.guitar-control-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:13px 0 16px}
+.guitar-control-grid.small{grid-template-columns:repeat(2,minmax(0,1fr))}
+.guitar-control-grid label{display:grid;gap:7px;min-width:0;color:var(--muted);font-size:12px;font-weight:650}
+.guitar-control-grid select{min-width:0;width:100%;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 8px;font-size:14px;min-height:46px}
+.guitar-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0}
+.guitar-toolbar .btn{min-height:43px}
+.guitar-score-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin:17px 0 9px;color:var(--text)}
+.guitar-score-heading strong{font-size:14px}.guitar-score-heading span,.guitar-score-heading small{font-size:12px;color:var(--muted)}
+.guitar-progress{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:15px 0 9px}
+.guitar-side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:16px}
+.guitar-side-by-side>.panel{min-width:0}
+.sight-score-scroll{overflow-x:auto;overflow-y:hidden;max-width:100%;border-radius:12px;background:var(--staff-surface,#182030);border:1px solid var(--line);touch-action:pan-x;overscroll-behavior-x:contain}
+.sight-svg{display:block;height:auto;max-height:230px;width:100%}
+.guitar-tab-solution{border:1px solid var(--line);padding:13px;border-radius:10px;margin:14px 0;background:var(--card2)}
+.guitar-tab-solution strong{display:block;font-size:13px;margin-bottom:10px}.guitar-tab-solution p{color:var(--muted);font-size:12px;line-height:1.7;margin:10px 0 0}
+.guitar-empty{padding:35px 13px;background:var(--card2);border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8;margin:12px 0}
+.guitar-answer-area{margin-top:24px}
+.guitar-answer-scroll{overflow-x:auto;max-width:100%;touch-action:pan-x;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:12px;background:var(--card2)}
+.guitar-answer-board{width:max-content;padding:10px 12px;max-width:none}
+.guitar-answer-row,.guitar-answer-head{display:grid;grid-template-columns:67px repeat(var(--answer-cols),59px);gap:6px;align-items:center;margin:5px 0}
+.guitar-answer-head span{display:block;text-align:center;font-size:11px;color:var(--muted)}
+.guitar-answer-row>b{font-size:12px;text-align:center;color:var(--muted)}
+.guitar-answer-fret{border:1px solid var(--line);background:var(--card);border-radius:7px;min-height:48px;min-width:59px;color:var(--text);font-weight:700;cursor:pointer}
+.guitar-answer-fret:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.guitar-answer-fret:hover{border-color:var(--accent)}
+.guitar-feedback{font-size:13px;line-height:1.65;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-top:12px}
+.guitar-result{border-top:1px solid var(--line);display:grid;justify-items:start;gap:8px;margin-top:19px;padding-top:19px;color:var(--text)}
+.guitar-result>strong{font-size:22px}.guitar-result>span{font-size:13px;color:var(--muted)}
+.guitar-stats{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;padding:17px 0}
+.guitar-stats strong{font-size:38px;letter-spacing:-.04em;color:var(--accent)}.guitar-stats span{font-size:13px;color:var(--muted)}
+.guitar-chord-visual{display:grid;grid-template-columns:minmax(100px,1fr) minmax(180px,1.15fr);align-items:center;gap:10px;background:var(--card2);border-radius:13px;padding:12px;margin:15px 0}
+.guitar-chord-name{display:grid;gap:7px;min-width:0}.guitar-chord-name small{color:var(--muted);font-size:12px}
+.guitar-chord-name strong{font-size:clamp(28px,4vw,45px);line-height:1.15;color:var(--text);overflow-wrap:anywhere}
+.guitar-chord-name span{color:var(--muted);font-size:13px}
+.guitar-chord-diagram{width:100%;max-width:290px;display:block;min-width:0}
+.guitar-four-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.guitar-four-item{display:grid;gap:7px;min-width:0;min-height:91px;text-align:left;padding:14px 12px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:11px;cursor:pointer}
+.guitar-four-item.current{border-color:var(--accent);background:var(--accent-dim)}
+.guitar-four-item small{font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.guitar-four-item strong{font-size:19px}.guitar-four-item span{font-size:11px;color:var(--muted)}
+.guitar-remember{border-top:1px solid var(--line);padding-top:18px;margin-top:24px}
+.guitar-remember strong{font-size:14px}.guitar-remember p{font-size:13px;color:var(--muted);line-height:1.9}
+.guitar-bpm{display:flex;align-items:center;gap:10px;color:var(--text);font-size:13px}
+.guitar-bpm input{max-width:88px;min-height:44px;border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:var(--card2);color:var(--text);font-size:16px}
+.guitar-rhythm-scroll{max-width:100%;overflow-x:auto}
+.guitar-rhythm-grid{display:grid;grid-template-columns:repeat(16,minmax(42px,1fr));min-width:685px;gap:6px;padding:12px 0}
+.guitar-rhythm-cell{border:1px solid var(--line);background:var(--card2);border-radius:9px;min-height:87px;color:var(--text);display:grid;align-content:center;justify-items:center;gap:8px;cursor:pointer}
+.guitar-rhythm-cell small{color:var(--muted);font-size:10px}.guitar-rhythm-cell b{font-size:22px}.guitar-rhythm-cell.rest{opacity:.6}
+.guitar-rhythm-cell.down{border-bottom:3px solid var(--accent)}.guitar-rhythm-cell.up{border-bottom:3px solid var(--viz-series-2,var(--accent))}
+.guitar-rhythm-cell.playing{outline:2px solid var(--accent);outline-offset:1px;background:var(--accent-dim)}
+@media(max-width:1120px){.guitar-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.guitar-side-by-side{grid-template-columns:1fr}}
+@media(max-width:700px){.guitar-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 15px}.guitar-nav-tab{font-size:12px;min-height:45px}.guitar-control-grid{gap:8px}.guitar-control-grid select{font-size:13px}.guitar-chord-visual{grid-template-columns:minmax(90px,1fr) minmax(150px,1.25fr);padding:6px}.guitar-toolbar{gap:7px}.guitar-toolbar .btn{font-size:12px}.guitar-side-by-side{gap:12px}.guitar-rhythm-grid{min-width:700px}}
+@media(max-width:390px){.guitar-control-grid{grid-template-columns:1fr}.guitar-chord-visual{grid-template-columns:1fr}.guitar-chord-diagram{max-width:260px;margin:auto}}
+
+.guitar-bpm-input{width:100%;max-width:180px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px;font-size:16px;min-height:46px}
