@@ -169,31 +169,33 @@ export function gripMidis(grip){return grip.frets.flatMap((f,i)=>f===null?[]:[OP
 export function validateGrip(grip,chord){const d=typeof chord==='string'?parseChord(chord):chord;if(!grip||!d)return false;const s=pitchSet(grip);return [...d.required].every(p=>s.has(p))&&grip.frets.every((f,i)=>f===null||(Number.isInteger(f)&&f>=0&&f<=22))&&gripMidis(grip)[0]%12===pitchClass(d.bass||d.root);}
 export function chordDiagramSVG(grip,chord){
  if(!grip)return '';
- const x0=35,delta=33,y0=47,step=32;
+ const x0=48,dx=36,step=36,y0=66;
  const used=grip.frets.filter(x=>x!==null&&x>0);
  const first=used.length?Math.max(1,Math.min(...used)):1;
- const count=Math.max(4,used.length?Math.max(...used)-first+1:4);
- let svg=`<rect width="240" height="270" rx="15" fill="var(--card2)"/>`;
+ const rows=Math.max(4,used.length?Math.max(...used)-first+1:4);
+ const bottom=y0+rows*step,height=bottom+58;
+ let svg=`<rect width="280" height="${height}" rx="15" fill="var(--card2)"/>`;
  for(let i=0;i<6;i++){
-  const x=x0+i*delta;
-  svg+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+count*step}" stroke="${i<3?'#af9a82':'#d5d4d2'}" stroke-width="${2.9-i*.3}"/>`;
+  const x=x0+i*dx;
+  svg+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${bottom}" stroke="${i<3?'#af9a82':'#d5d4d2'}" stroke-width="${2.9-i*.3}"/>`;
+  svg+=`<text x="${x}" y="21" text-anchor="middle" fill="var(--muted)" font-size="12" font-weight="800">${6-i}</text>`;
  }
- for(let i=0;i<=count;i++){
+ for(let i=0;i<=rows;i++){
   const y=y0+i*step;
-  svg+=`<line x1="${x0}" x2="${x0+5*delta}" y1="${y}" y2="${y}" stroke="#aab7be" stroke-width="${i===0&&first===1?5:2}"/>`;
+  svg+=`<line x1="${x0}" x2="${x0+5*dx}" y1="${y}" y2="${y}" stroke="#aab7be" stroke-width="${i===0&&first===1?5:2}"/>`;
  }
- svg+=`<text x="16" y="${y0+21}" fill="var(--muted)" font-size="12">${first}fr</text>`;
+ svg+=`<text x="18" y="${y0+23}" fill="var(--muted)" font-size="13" font-weight="800">${first}fr</text>`;
  for(let i=0;i<6;i++){
-  const x=x0+i*delta,f=grip.frets[i];
-  if(f===null){svg+=`<text x="${x}" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="var(--muted)">×</text>`;continue;}
-  if(f===0){svg+=`<circle cx="${x}" cy="27" r="7" fill="none" stroke="var(--staff-note)" stroke-width="2"/>`;continue;}
+  const x=x0+i*dx,f=grip.frets[i];
+  if(f===null){svg+=`<text x="${x}" y="47" text-anchor="middle" font-size="22" font-weight="700" fill="var(--muted)">×</text>`;continue;}
+  if(f===0){svg+=`<circle cx="${x}" cy="40" r="8" fill="none" stroke="var(--staff-note)" stroke-width="2.5"/>`;continue;}
   const y=y0+(f-first+.5)*step,mid=OPEN_LOW[i]+f,root=PC(mid)===pitchClass(chord.root);
   const label=chord.parts.find(p=>p.pc===PC(mid))?.tag||'B';
   const finger=grip.verifiedDiagram&&grip.fingers?.[i]>0?String(grip.fingers[i]):label;
-  svg+=`<circle cx="${x}" cy="${y}" r="13" fill="${root?'#72dbc7':'#d7e3e9'}" stroke="#1a2a34" stroke-width="1.7"/><text x="${x}" y="${y+4}" font-size="11" text-anchor="middle" fill="#102633" font-weight="800">${esc(finger)}</text>`;
+  svg+=`<circle cx="${x}" cy="${y}" r="16" fill="${root?'#72dbc7':'#e1eaf1'}" stroke="#162934" stroke-width="2"/><text x="${x}" y="${y+5}" font-size="${String(finger).length>2?10:13}" text-anchor="middle" fill="#102633" font-weight="800">${esc(finger)}</text>`;
  }
- svg+=`<text x="120" y="256" fill="var(--muted)" text-anchor="middle" font-size="12">${grip.verifiedDiagram?"숫자: 손가락 · ● 루트 · × 뮤트":"숫자: 코드톤 · ● 루트 · × 뮤트"}</text>`;
- return `<svg class="lib-diagram" viewBox="0 0 240 270" role="img" aria-label="${esc(chord.name)} 기타 코드 운지, ${esc(grip.rootString)} ${grip.rootFret}프렛">${svg}</svg>`;
+ svg+=`<text x="140" y="${bottom+30}" fill="var(--muted)" text-anchor="middle" font-size="12">${grip.verifiedDiagram?'숫자 = 손가락 번호':'숫자 = 코드톤 · b = 플랫'}</text>`;
+ return `<svg class="lib-diagram" viewBox="0 0 280 ${height}" role="img" aria-label="${esc(chord.name)} 기타 코드 운지, ${esc(grip.rootString)} ${grip.rootFret}프렛">${svg}</svg>`;
 }
 export function realisticFretboard({root='C',intervals=INTERVALS.major,show='scale',chord=null,grip=null,maxFret=22}={}){
  // Exact 12-TET fret spacing based on Fender's 25.5" scale, uniformly projected.
