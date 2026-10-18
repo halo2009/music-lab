@@ -83,6 +83,44 @@ const scoreGrip=g=>{
  const open=g.frets.filter(f=>f===0).length;
  return span*9+gaps*6+Math.max(0,count-4)*2+(g.rootFret*.75)-open*3+(g.missing.length*4);
 };
+// Familiar E/A/D movable shapes are prioritized over speculative search results.
+// Finger numbers are shown only for these curated grip templates (1=index through 4=pinky).
+const REFERENCE_SHAPES={
+ R6:{
+  '':{offsets:[0,2,2,1,0,0],fingers:[1,3,4,2,1,1]},
+  'm':{offsets:[0,2,2,0,0,0],fingers:[1,3,4,1,1,1]},
+  '7':{offsets:[0,2,0,1,0,0],fingers:[1,3,1,2,1,1]},
+  'maj7':{offsets:[0,2,1,1,0,0],fingers:[1,4,2,3,1,1]},
+  'm7':{offsets:[0,2,0,0,0,0],fingers:[1,3,1,1,1,1]},
+ },
+ R5:{
+  '':{offsets:[null,0,2,2,2,0],fingers:[null,1,3,3,3,1]},
+  'm':{offsets:[null,0,2,2,1,0],fingers:[null,1,3,4,2,1]},
+  '7':{offsets:[null,0,2,0,2,0],fingers:[null,1,3,1,4,1]},
+  'maj7':{offsets:[null,0,2,1,2,0],fingers:[null,1,3,2,4,1]},
+  'm7':{offsets:[null,0,2,0,1,0],fingers:[null,1,3,1,2,1]},
+ },
+ R4:{
+  '':{offsets:[null,null,0,2,3,2],fingers:[null,null,1,2,4,3]},
+  'm':{offsets:[null,null,0,2,3,1],fingers:[null,null,1,3,4,2]},
+  '7':{offsets:[null,null,0,2,1,2],fingers:[null,null,1,3,2,4]},
+  'maj7':{offsets:[null,null,0,2,2,2],fingers:[null,null,1,3,3,3]},
+  'm7':{offsets:[null,null,0,2,1,1],fingers:[null,null,1,3,2,2]},
+ },
+};
+export function standardGrip(chord,rootString='R6',maxFret=18){
+ const d=typeof chord==='string'?parseChord(chord):chord;
+ if(!d||d.bass||!REFERENCE_SHAPES[rootString]?.[d.quality])return null;
+ const base={R6:0,R5:1,R4:2}[rootString];const model=REFERENCE_SHAPES[rootString][d.quality];
+ for(let fret=0;fret<=maxFret;fret++){
+  if(PC(OPEN_LOW[base]+fret)!==pitchClass(d.root))continue;
+  const frets=model.offsets.map(n=>n===null?null:fret+n);
+  if(Math.max(...frets.filter(x=>x!==null))>22)continue;
+  const grip={frets,base,rootString,rootFret:fret,missing:[],fingers:fret===0?model.fingers.map((v,i)=>frets[i]===0?0:v):[...model.fingers],barre:fret>0?{fret,from:6-base,to:1}:null,verifiedDiagram:true,score:-20+fret*.3};
+  if(validateGrip(grip,d))return grip;
+ }
+ return null;
+}
 export function voicingsFor(chord,{rootString='all',maxResults=15,maxFret=18}={}){
  const d=typeof chord==='string'?parseChord(chord):chord;if(!d)return [];
  const bassRoot=PC(pitchClass(d.bass||d.root)),target=new Set([...d.parts.map(p=>p.pc),bassRoot]);
@@ -115,7 +153,8 @@ export function voicingsFor(chord,{rootString='all',maxResults=15,maxFret=18}={}
    rec(0,[]);
   }
  }
- const dedup=new Map();for(const g of results){const id=g.frets.join(',');const x=dedup.get(id);if(!x||g.score<x.score)dedup.set(id,g);}
+ const standard=(rootString==='all'?['R6','R5','R4']:[rootString]).map(x=>standardGrip(d,x,maxFret)).filter(Boolean);
+ const dedup=new Map();for(const g of [...standard,...results]){const id=g.frets.join(',');const x=dedup.get(id);if(!x||g.score<x.score)dedup.set(id,g);}
  const ranked=[...dedup.values()].sort((a,b)=>a.score-b.score||a.rootFret-b.rootFret);
  if(rootString!=='all')return ranked.slice(0,maxResults);
  // A comparison library should show different bass-string roots, not twelve small variations of one grip.
@@ -150,9 +189,10 @@ export function chordDiagramSVG(grip,chord){
   if(f===0){svg+=`<circle cx="${x}" cy="27" r="7" fill="none" stroke="var(--staff-note)" stroke-width="2"/>`;continue;}
   const y=y0+(f-first+.5)*step,mid=OPEN_LOW[i]+f,root=PC(mid)===pitchClass(chord.root);
   const label=chord.parts.find(p=>p.pc===PC(mid))?.tag||'B';
-  svg+=`<circle cx="${x}" cy="${y}" r="13" fill="${root?'#72dbc7':'#d7e3e9'}" stroke="#1a2a34" stroke-width="1.7"/><text x="${x}" y="${y+4}" font-size="11" text-anchor="middle" fill="#102633" font-weight="800">${esc(label)}</text>`;
+  const finger=grip.verifiedDiagram&&grip.fingers?.[i]>0?String(grip.fingers[i]):label;
+  svg+=`<circle cx="${x}" cy="${y}" r="13" fill="${root?'#72dbc7':'#d7e3e9'}" stroke="#1a2a34" stroke-width="1.7"/><text x="${x}" y="${y+4}" font-size="11" text-anchor="middle" fill="#102633" font-weight="800">${esc(finger)}</text>`;
  }
- svg+=`<text x="120" y="256" fill="var(--muted)" text-anchor="middle" font-size="12">● 루트 · ○ 개방 · × 뮤트</text>`;
+ svg+=`<text x="120" y="256" fill="var(--muted)" text-anchor="middle" font-size="12">${grip.verifiedDiagram?"숫자: 손가락 · ● 루트 · × 뮤트":"숫자: 코드톤 · ● 루트 · × 뮤트"}</text>`;
  return `<svg class="lib-diagram" viewBox="0 0 240 270" role="img" aria-label="${esc(chord.name)} 기타 코드 운지, ${esc(grip.rootString)} ${grip.rootFret}프렛">${svg}</svg>`;
 }
 export function realisticFretboard({root='C',intervals=INTERVALS.major,show='scale',chord=null,grip=null,maxFret=22}={}){

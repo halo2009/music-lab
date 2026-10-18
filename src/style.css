@@ -286,3 +286,51 @@
 /* Narrow-screen search-field guard */
 .lib-search-row input{width:0}
 @media(max-width:700px){.lib-search-row .btn{flex:0 0 76px;min-width:0;padding:10px 9px}}
+/* Alpha 0.8 — dedicated guitar chromatic and practical chord progressions */
+.guitar-nav:has(.guitar-nav-tab:nth-child(7)){display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.guitar-nav:has(.guitar-nav-tab:nth-child(7)) .guitar-nav-tab{font-size:12px;min-width:0;padding-inline:5px}
+.chromatic-intro{display:flex;justify-content:space-between;gap:15px;align-items:start;margin:17px 0 18px}
+.chromatic-intro h2{font-size:24px;letter-spacing:-.05em;margin:8px 0 8px}
+.chromatic-intro p{color:var(--muted);font-size:12px;line-height:1.75;max-width:700px;margin:0}
+.chromatic-layout{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(0,1.2fr);gap:14px;align-items:start}
+.chromatic-layout .panel{min-width:0}
+.chromatic-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.chromatic-form label,.pro-action-row label{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:12px;font-weight:750;min-width:0}
+.chromatic-form select,.chromatic-form input,.pro-action-row input,.pro-search input{width:100%;max-width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card2);color:var(--text);padding:10px;font-size:16px}
+.chromatic-quick,.pro-presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.chromatic-quick button,.pro-presets button{background:var(--card2);color:var(--muted);padding:9px 11px;min-height:42px;border:1px solid var(--line);border-radius:10px;font-size:12px;font-weight:750}
+.chromatic-quick button.active,.pro-presets button:focus-visible{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.chromatic-summary{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:14px 0;margin-top:12px;border-top:1px solid var(--line)}
+.chromatic-summary b{color:var(--text)}
+.chromatic-actions{display:flex;flex-wrap:wrap;gap:8px}
+.chromatic-actions .btn{flex:1 1 105px;white-space:normal;min-height:44px}
+.chromatic-status{font-size:clamp(17px,2.5vw,24px);font-weight:850;min-height:34px;margin:4px 0 12px;letter-spacing:-.03em}
+.chromatic-progress-track{height:7px;border-radius:20px;background:var(--card2);overflow:hidden;margin:9px 0 15px}
+.chromatic-progress-track>div{height:100%;background:var(--accent);transition:width .13s ease}
+.chromatic-board{width:100%;height:auto;max-width:800px;display:block}
+.chromatic-tip{margin:10px 0 0;font-size:12px;line-height:1.8;color:var(--muted)}
+.chromatic-tip b{color:var(--text)}
+.chromatic-finish{display:flex;flex-wrap:wrap;gap:11px;align-items:center;border-top:1px solid var(--line);padding-top:15px;margin-top:15px}
+.chromatic-finish strong{font-size:14px}.chromatic-finish span{font-size:12px;color:var(--muted)}
+.chromatic-finish .btn{margin-left:auto}
+.chromatic-history{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chromatic-history>div{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card2);display:grid;gap:6px;min-width:0}
+.chromatic-history strong{color:var(--text);font-size:12px}.chromatic-history span{color:var(--muted);font-size:11px;line-height:1.5}
+.pro-input-label{display:block;font-size:12px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pro-search{display:flex;gap:9px;min-width:0}
+.pro-search input{flex:1 1 0}
+.pro-search .btn{min-height:44px}
+.pro-action-row{display:flex;gap:12px;align-items:end;margin:20px 0 15px;flex-wrap:wrap}
+.pro-action-row label{max-width:110px}.pro-action-row .btn{min-height:44px}
+.pro-error{padding:12px;color:var(--red);border:1px solid var(--red);border-radius:9px;font-size:12px;margin:9px 0}
+.pro-progression{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:15px 0}
+.pro-chord-tile{min-width:0;min-height:100px;text-align:left;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.pro-chord-tile.active{border-color:var(--accent);background:var(--accent-dim)}
+.pro-chord-tile small{color:var(--muted);font-size:10px;letter-spacing:.08em}
+.pro-chord-tile strong{font-size:clamp(15px,1.7vw,20px);letter-spacing:-.03em;overflow-wrap:anywhere}
+.pro-chord-tile span{font-size:11px;color:var(--muted)}
+.pro-detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,.65fr);gap:18px;align-items:center;padding:20px;border:1px solid var(--line);background:var(--card2);border-radius:12px}
+.pro-detail h3{margin:0 0 8px}.pro-detail p{font-size:12px;color:var(--muted)}.pro-detail .lib-diagram{width:100%;max-width:210px;justify-self:center}
+@media(max-width:1050px){.guitar-nav:has(.guitar-nav-tab:nth-child(7)){grid-template-columns:repeat(4,minmax(0,1fr))}.chromatic-layout{grid-template-columns:1fr}.chromatic-main{order:0}.chromatic-controls{order:0}}
+@media(max-width:700px){.guitar-nav:has(.guitar-nav-tab:nth-child(7)){grid-template-columns:repeat(3,minmax(0,1fr))}.guitar-nav:has(.guitar-nav-tab:nth-child(7)) .guitar-nav-tab{min-height:44px;font-size:11px}.chromatic-intro .pill{display:none}.chromatic-intro h2{font-size:21px}.chromatic-form{grid-template-columns:repeat(2,minmax(0,1fr))}.chromatic-layout{gap:11px}.chromatic-history{grid-template-columns:1fr}.pro-progression{grid-template-columns:repeat(2,minmax(0,1fr))}.pro-detail{grid-template-columns:1fr}.pro-search input{font-size:16px}.pro-search .btn{padding-inline:10px}.pro-detail .lib-diagram{max-width:225px}}
+@media(max-width:380px){.chromatic-form{grid-template-columns:1fr}.chromatic-form select,.chromatic-form input{font-size:16px}.pro-search .btn{font-size:11px;white-space:normal}}
