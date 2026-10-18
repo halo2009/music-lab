@@ -143,3 +143,33 @@
 .voice-tabs .voice-tab strong{font-size:13px}.voice-tabs .voice-tab span{font-size:11px}
 @media(max-width:760px){.voice-start{grid-template-columns:1fr;gap:12px;padding:15px}.voice-start-head strong{font-size:16px}.lesson-easy{font-size:13px!important}}
 @media(max-width:360px){.voice-tabs .voice-tab strong{font-size:10px}}
+
+/* Music Lab Alpha 0.5: guided vocal learning and listening/pitch controls. */
+.voice-path-panel {margin-bottom: 16px;}
+.voice-path-flow {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0;}
+.voice-path-stage {min-width:0;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--text);padding:13px 10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:5px;min-height:110px;}
+.voice-path-stage span {font-size:12px;color:var(--muted);font-weight:700;}
+.voice-path-stage strong {font-size:14px;}
+.voice-path-stage small {color:var(--muted);font-size:12px;}
+.voice-path-stage.selected {border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--res-bg);}
+.voice-path-explain {display:grid;grid-template-columns:minmax(110px,240px) 1fr;gap:19px;align-items:center;border-radius:14px;padding:18px;background:var(--res-bg);color:var(--text);}
+.voice-path-illustration svg {width:100%;height:auto;}
+.voice-path-explain h4 {margin:8px 0;font-size:16px;line-height:1.4;}
+.voice-path-explain p {font-size:14px;line-height:1.75;color:var(--text);margin:6px 0;}
+.voice-path-explain small {display:block;font-size:12px;line-height:1.5;color:var(--muted);}
+.voice-path-next {display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.voice-compare-inline {display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0 10px;}
+.voice-compare-inline span {font-size:12px;color:var(--muted);line-height:1.6;}
+.voice-pitch-coach {border:1px solid var(--line);border-radius:14px;padding:15px;margin:14px 0;background:var(--res-bg);}
+.voice-coach-heading {display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;font-size:14px;}
+.voice-coach-heading span {font-size:13px;color:var(--muted);}
+.voice-pitch-scale {height:70px;position:relative;border-radius:11px;margin:14px 0 5px;border:1px solid var(--line);background:linear-gradient(90deg,rgba(85,155,214,.13),rgba(91,174,153,.12) 40%,rgba(91,174,153,.12) 60%,rgba(214,150,104,.13));}
+.voice-pitch-scale:after {content:'';position:absolute;left:50%;top:0;height:100%;border-left:1px dashed var(--muted);}
+.voice-pitch-scale span {position:absolute;bottom:9px;color:var(--muted);font-size:12px;}
+.voice-pitch-scale .left{left:13px}.voice-pitch-scale .center{left:50%;transform:translateX(-50%)}.voice-pitch-scale .right{right:13px}
+.voice-pitch-pointer {position:absolute;top:10px;width:15px;height:15px;border-radius:50%;background:var(--muted);transform:translateX(-50%);border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);z-index:1;transition:left .13s ease;}
+.voice-pitch-pointer.measured {background:var(--accent);}
+.voice-target-buttons {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);gap:8px;margin:10px 0;}
+.voice-target-buttons .btn {min-width:0;white-space:normal;justify-content:center;}
+@media (max-width:680px){.voice-path-flow{grid-template-columns:repeat(2,minmax(0,1fr));}.voice-path-explain{grid-template-columns:1fr;padding:14px;gap:6px}.voice-path-illustration{max-width:280px;}.voice-target-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.voice-target-buttons .btn.primary{grid-column:1 / -1;grid-row:1}}
+@media (prefers-reduced-motion: reduce) {.voice-pitch-pointer{transition:none;}}

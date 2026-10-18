@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {pitchGuide,pitchGuidePercent,voicePathStages} from './src/pitch-guide.js';
+assert.equal(voicePathStages.length,4);
+assert.equal(pitchGuide(440,69).valid,true);
+assert.ok(Math.abs(pitchGuide(440,69).cents)<.01);
+assert.ok(pitchGuide(440,68).cents>99);
+assert.ok(pitchGuide(440,70).cents<-99);
+assert.equal(pitchGuide(0,69).valid,false);
+assert.equal(pitchGuidePercent(null),50);
+assert.equal(pitchGuidePercent(400),97);
+assert.equal(pitchGuidePercent(-400),3);
+console.log('PASS: 4 voice path steps, pitch coach and boundaries');
