@@ -235,3 +235,54 @@
 @media(max-width:390px){.guitar-control-grid{grid-template-columns:1fr}.guitar-chord-visual{grid-template-columns:1fr}.guitar-chord-diagram{max-width:260px;margin:auto}}
 
 .guitar-bpm-input{width:100%;max-width:180px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px;font-size:16px;min-height:46px}
+/* Music Lab Alpha 0.7 • Chord Library / realistic Guitar Fretboard */
+.guitar-nav:has(.guitar-nav-tab:nth-child(5)){grid-template-columns:repeat(5,minmax(0,1fr))}
+.lib-heading{padding:23px 26px;margin:14px 0 19px}
+.lib-heading-top{display:flex;justify-content:space-between;gap:17px;align-items:start}
+.lib-heading-top h2{margin:6px 0 8px;font-size:clamp(20px,2.2vw,26px);letter-spacing:-.04em;color:var(--text)}
+.lib-heading-top p{color:var(--muted);font-size:13px;line-height:1.7}
+.lib-search{margin-top:21px;display:grid;gap:8px}
+.lib-search label{font-size:12px;font-weight:800;color:var(--text)}
+.lib-search-row{display:flex;gap:9px}
+.lib-search-row input{min-width:0;flex:1;padding:12px 15px;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;font:inherit;font-size:16px;letter-spacing:.01em}
+.lib-search-row input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.lib-search-row .btn{min-width:90px;justify-content:center}
+.lib-search small{font-size:11px;color:var(--muted);line-height:1.6}
+.lib-controls{display:grid;grid-template-columns:minmax(105px,.66fr) minmax(170px,1.5fr) minmax(135px,1fr);gap:10px;margin-top:19px}
+.lib-controls label{color:var(--muted);font-size:12px;font-weight:650;display:grid;gap:7px;min-width:0}
+.lib-controls select{width:100%;min-width:0;padding:12px 8px;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:15px;min-height:46px}
+.lib-root-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:16px}
+.lib-root-chip{min-width:43px;min-height:43px;padding:6px 9px;border-radius:9px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:750;cursor:pointer}
+.lib-root-chip.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.lib-topline{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin:26px 2px 13px}
+.lib-topline h2{font-size:clamp(28px,4.4vw,42px);margin:3px 0 3px;letter-spacing:-.045em;color:var(--text)}
+.lib-topline p{font-size:13px;color:var(--muted);line-height:1.6}
+.lib-top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lib-feature{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.84fr);gap:14px;align-items:start;margin-bottom:16px}
+.lib-main-shape{display:grid;grid-template-columns:minmax(190px,.78fr) minmax(0,1.06fr);align-items:center;gap:14px;min-width:0;min-height:310px}
+.lib-diagram{width:100%;height:auto;max-width:255px;display:block;justify-self:center}
+.lib-shape-details{min-width:0}.lib-shape-details strong{font-size:18px;color:var(--text)}
+.lib-shape-details strong span{font-size:13px;color:var(--accent)}.lib-shape-details>p{font-size:12px;color:var(--muted);margin:10px 0}
+.lib-fret-tags{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:13px 0}
+.lib-fret-tags span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 4px;border:1px solid var(--line);background:var(--card2);border-radius:8px;font-size:11px;color:var(--muted)}
+.lib-fret-tags b{font-size:13px;color:var(--text)}
+.lib-grip-rail{min-width:0;display:flex;flex-direction:column;gap:9px;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--card)}
+.lib-rail-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.lib-rail-title strong{color:var(--text);font-size:15px}.lib-rail-title small{font-size:11px;color:var(--muted)}
+.lib-voice-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow-y:auto}
+.lib-mini{background:var(--card2);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:start;justify-content:center;min-height:76px;padding:10px 11px;gap:4px;text-align:left;cursor:pointer;color:var(--text)}
+.lib-mini.on{border-color:var(--accent);background:var(--accent-dim)}.lib-mini>span{font-size:10px;color:var(--accent);font-weight:800}.lib-mini strong{font-size:20px}.lib-mini small{color:var(--muted);font-size:10px}
+.lib-fret-section{margin:14px 0 17px}.lib-fret-section .panel-head{margin-bottom:5px}
+.real-fret-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:var(--card2);padding:12px 0 4px;margin-top:12px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.real-fret{display:block;height:auto;max-height:335px}.real-fret-scroll:focus-within{outline:1px solid var(--accent)}
+.lib-no-grip{line-height:1.8;color:var(--muted)}.lib-no-grip h3{color:var(--text);margin:0 0 9px}
+.lib-details>summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--text);padding:5px 0;min-height:36px}.lib-details p{color:var(--muted);font-size:13px;line-height:1.8;margin-top:15px}
+.lib-role-row{display:flex;gap:8px;flex-wrap:wrap;margin:17px 0 8px}.lib-interval{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 14px;min-width:63px;background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:13px}
+.lib-interval b{font-size:12px;color:var(--accent)}
+.lib-history{display:grid;gap:16px}.lib-history strong{font-size:13px;color:var(--text)}
+.lib-history-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.lib-history-chips button{padding:10px 12px;color:var(--text);border:1px solid var(--line);border-radius:8px;background:var(--card2);min-height:42px;cursor:pointer;font-size:12px}.lib-history-chips span{color:var(--muted);font-size:12px}
+@media(max-width:1100px){.lib-feature{grid-template-columns:1fr}.lib-voice-row{grid-template-columns:repeat(4,minmax(0,1fr));max-height:none}.lib-main-shape{grid-template-columns:minmax(190px,.75fr) minmax(0,1.3fr)}}
+@media(max-width:700px){.guitar-nav:has(.guitar-nav-tab:nth-child(5)){grid-template-columns:repeat(3,minmax(0,1fr))}.lib-heading{padding:18px 15px}.lib-heading-top .pill{display:none}.lib-search-row input{font-size:16px}.lib-controls{grid-template-columns:minmax(100px,.75fr) minmax(155px,1.4fr)}.lib-controls label:last-child{grid-column:1/-1}.lib-main-shape{grid-template-columns:1fr}.lib-shape-details{padding:0 7px}.lib-voice-row{grid-template-columns:repeat(2,minmax(0,1fr))}.lib-topline{margin-top:23px}.lib-top-actions{width:100%}.lib-top-actions .btn{flex:1}.real-fret-scroll{padding-top:9px}.lib-root-chip{min-width:42px}.lib-fret-section{padding:15px 12px}}
+@media(max-width:370px){.lib-search-row .btn{min-width:74px;padding:8px 10px}.lib-controls{grid-template-columns:1fr 1fr}.lib-controls select{font-size:13px}.lib-fret-tags{grid-template-columns:repeat(3,1fr)}}
+/* Narrow-screen search-field guard */
+.lib-search-row input{width:0}
+@media(max-width:700px){.lib-search-row .btn{flex:0 0 76px;min-width:0;padding:10px 9px}}
