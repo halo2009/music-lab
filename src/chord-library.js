@@ -185,6 +185,18 @@ export function chordDiagramSVG(grip,chord){
   svg+=`<line x1="${x0}" x2="${x0+5*dx}" y1="${y}" y2="${y}" stroke="#aab7be" stroke-width="${i===0&&first===1?5:2}"/>`;
  }
  svg+=`<text x="18" y="${y0+23}" fill="var(--muted)" font-size="13" font-weight="800">${first}fr</text>`;
+ // Show real mini-/full-barres only when a curated template explicitly gives
+ // the same finger number at the same fret on more than one string.
+ if(grip.verifiedDiagram&&Array.isArray(grip.fingers)){
+  for(let finger=1;finger<=4;finger++){
+   const indices=grip.frets.map((f,i)=>f!==null&&f>0&&grip.fingers[i]===finger?i:-1).filter(i=>i>=0);
+   const frets=[...new Set(indices.map(i=>grip.frets[i]))];
+   if(indices.length<2||frets.length!==1)continue;
+   const ff=frets[0],yy=y0+(ff-first+.5)*step;
+   const xx=x0+Math.min(...indices)*dx,rr=(Math.max(...indices)-Math.min(...indices))*dx;
+   svg+=`<rect x="${xx-15}" y="${yy-16}" width="${rr+30}" height="32" rx="16" fill="#93c7ca" fill-opacity=".42" stroke="#84c8c8" stroke-width="1.5"/>`;
+  }
+ }
  for(let i=0;i<6;i++){
   const x=x0+i*dx,f=grip.frets[i];
   if(f===null){svg+=`<text x="${x}" y="47" text-anchor="middle" font-size="22" font-weight="700" fill="var(--muted)">×</text>`;continue;}
