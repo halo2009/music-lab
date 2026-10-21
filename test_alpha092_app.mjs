@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+const memory=new Map(),events=new Map(),app={innerHTML:''},fields=new Map();
+globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
+globalThis.document={documentElement:{setAttribute(){}},querySelector:s=>s==='#app'?app:fields.get(s)||null,addEventListener:(k,fn)=>events.set(k,fn)};
+globalThis.window={addEventListener(){},scrollTo(){},AudioContext:class{}};
+Object.defineProperty(globalThis,'navigator',{configurable:true,value:{}});
+globalThis.fetch=async()=>{throw Error('test offline')};globalThis.setInterval=()=>0;globalThis.confirm=()=>true;
+const warn=console.warn;console.warn=()=>{};
+try{
+ await import('./src/app.js');
+ const click=(action,d={})=>events.get('click')({target:{closest(){return {dataset:{action,...d},disabled:false}}}});
+ const change=(id,value)=>events.get('change')({target:{id,value}});
+ assert.match(app.innerHTML,/ALPHA 0\.9\.2/);
+ click('nav-compose');assert.match(app.innerHTML,/CHORD STUDIO 2\.0/);assert.match(app.innerHTML,/BAR 04/);
+ click('studio-add-bar');assert.match(app.innerHTML,/BAR 05/);
+ click('studio-split');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments.length,2);
+ fields.set('#studio-code',{value:'BbM7'});click('studio-set-code');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments[0].symbol,'BbM7');
+ change('studio-voicing','1');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments[0].voicing,1);
+ fields.set('#studio-bulk',{value:'F#m7 → B7 → EM7 → C#m7'});click('studio-bulk-apply');
+ assert.deepEqual(JSON.parse(memory.get('musiclab-studio-active')).bars.map(b=>b.segments[0].symbol),['F#m7','B7','EM7','C#m7']);
+ change('studio-title','예시 진행');click('studio-save');assert.equal(JSON.parse(memory.get('musiclab-studio-projects')).length,1);
+ click('studio-add-bar');click('studio-load',{index:'0'});assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars.length,4);
+ click('studio-suggest',{symbol:'G#m7'});assert.match(app.innerHTML,/G#m7/);
+ click('nav-theory');assert.match(app.innerHTML,/theory-piano/);assert.match(app.innerHTML,/화성학 자동 문제/);
+ change('theory-scale','harmonicMinor');assert.match(app.innerHTML,/Harmonic minor/);
+ click('harmony-next');assert.match(app.innerHTML,/harmony-answers/);
+ assert.equal(JSON.parse(memory.get('musiclab-harmony-questions')).length,1);
+ click('nav-ear');click('ear-mode',{mode:'read'});click('ear-new');assert.equal(JSON.parse(memory.get('musiclab-problem-recent')).length,1);
+ click('nav-guitar');assert.match(app.innerHTML,/코드 사전/);
+ console.log('PASS UI: composition edits + save/load + bulk chord input + theory keyboard + question generator + guitar continuity');
+}finally{console.warn=warn}

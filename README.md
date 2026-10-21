@@ -1,3 +1,7 @@
+# Music Lab Alpha 0.9.2 — 작곡 스튜디오 및 자동 문제 생성 업데이트
+
+최신 변경사항과 설치 방법: [UPDATE_0.9.2.md](UPDATE_0.9.2.md)
+
 # Music Lab Alpha 0.9.1 — Guitar Fretboard Theory
 
 ## 새로 추가된 기타 학습 기능
