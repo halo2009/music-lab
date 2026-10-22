@@ -14,17 +14,18 @@ import {cagedShapes,triadShapes,arpeggioNotes,dropVoicings,TRIAD_STRING_SETS,DRO
 import {CHROMATIC_PATTERNS} from './chromatic.js';
 import {startMetronome} from './metronome.js';
 import {PROGRESSION_PRESETS,parseProgression,planProgression} from './chord-progression.js';
-import {newStudioProject,normalizeStudioProject,cloneProject,addBar,removeBar,splitSlot,mergeSlot,setStudioChord,setStudioVoicing,studioEvents,studioVoicing,STUDIO_PRESETS,applyStudioPreset,studioSuggestions,buildStudioMidi} from './studio-engine.js';
+import {newStudioProject,normalizeStudioProject,cloneProject,addBar,removeBar,duplicateBar,splitSlot,mergeSlot,setStudioChord,setStudioVoicing,studioEvents,studioVoicing,STUDIO_PRESETS,applyStudioPreset,studioSuggestions,buildStudioMidi} from './studio-engine.js';
 import {nextSeed,uniqueGenerated,makeHarmonyProblem,makeEarProblem} from './problem-engine.js';
-const APP_VERSION='0.9.2';
+import {BACKING_STYLES,normalizeBacking,startBackingTrack} from './backing-track.js';
+const APP_VERSION='0.9.4';
 const $=sel=>document.querySelector(sel);
 const safe=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const persisted=read('musiclab-settings',{});
-const state={tab:'home',root:persisted.root||'C',mode:persisted.mode||'major',theme:persisted.theme||'dark',seventh:true,theoryScale:persisted.mode||'major',theoryOctave:4,harmonyLevel:1,harmonyQuestion:null,harmonyAnswer:null,harmonyHistory:read('musiclab-harmony-questions',[]),problemRecent:read('musiclab-problem-recent',[]),guitarScale:'major',guitarDisplay:'scale',guitarView:'library',theoryMode:'caged',theoryRoot:'C',theoryMinor:false,theoryTriadSet:'123',theoryArpQuality:'maj7',theoryStartFret:1,theoryDropQuality:'maj7',theoryDropType:2,theoryDropSet:'4321',theorySelected:0,theoryHistory:read('musiclab-guitar-theory-history',[]),libGripFavorites:read('musiclab-grip-favorites',[]),chromaticPattern:'1234',chromaticBpm:60,chromaticPlaying:false,chromaticHistory:read('musiclab-chromatic-history',[]),proInput:'F#m7 B7 EM7 C#m7',proPlan:null,proSelected:0,proBpm:80,proPlaying:false,proError:'',libRoot:'F#',libQuality:'m7',libBass:'',libString:'all',libSelected:0,libAdvanced:false,libFavorites:read('musiclab-lib-favorites',[]),libRecent:read('musiclab-lib-recent',[]),realFretMax:22,libFretOpen:false,guitarSightKey:'C-major',guitarSightLevel:1,guitarSightBpm:80,guitarSightPos:0,guitarSightExam:false,guitarSight:null,guitarSightIndex:0,guitarSightHits:0,guitarSightMistakes:0,guitarSightRetried:false,guitarSightStatus:'idle',guitarSightShowTab:false,guitarSightLast:'',guitarSightHistory:read('musiclab-guitar-sight',[]),guitarGripRootString:'R6',guitarGripQuality:'all',guitarGrip:chooseChord({root:'C',quality:'m7',rootString:'R6'}),guitarProgression:[],guitarCurrent:0,guitarRhythmBpm:80,guitarRhythmPattern:['D','-','D','U','D','-','D','U','D','-','D','U','D','-','D','U'],guitarRhythmPlaying:-1,selectedChord:0,earMode:'staff',clef:'treble',staffLevel:'chromatic',melodyInputs:[],earSession:{completed:0,correct:0},earHistory:read('musiclab-training-history',[]),question:null,feedback:null,reg:'m1',part:'folds',vocalView:'science',voiceStep:0,vocalLesson:'fold',vowelPreset:'a',voiceQuizIndex:0,voiceQuizChoice:null,voiceQuizScore:0,voiceTarget:read('musiclab-voice-target',60),voiceNotes:read('musiclab-voice-notes',''),larynxFocus:'all',larynxYaw:20,larynxPitch:43,larynxZoom:100,larynxAnimating:false,glottalOpen:30,jaw:55,tongue:50,lips:30,vocalF0:180,vocalBreath:24,compDegrees:[0,5,3,4],studioProject:read('musiclab-studio-active',null),studioProjects:read('musiclab-studio-projects',[]),studioSelected:[0,0],studioError:'',melodyNotes:read('musiclab-melody',[]),bpm:82,playing:-1,entries:read('musiclab-entries',[]),stats:read('musiclab-ear',{total:0,correct:0}),micActive:false,micError:''};
+const state={tab:'home',root:persisted.root||'C',mode:persisted.mode||'major',theme:persisted.theme||'dark',seventh:true,theoryScale:persisted.mode||'major',theoryOctave:4,harmonyLevel:1,harmonyQuestion:null,harmonyAnswer:null,harmonyHistory:read('musiclab-harmony-questions',[]),problemRecent:read('musiclab-problem-recent',[]),guitarScale:'major',guitarDisplay:'scale',guitarView:'library',theoryMode:'caged',theoryRoot:'C',theoryMinor:false,theoryTriadSet:'123',theoryArpQuality:'maj7',theoryStartFret:1,theoryDropQuality:'maj7',theoryDropType:2,theoryDropSet:'4321',theorySelected:0,theoryHistory:read('musiclab-guitar-theory-history',[]),libGripFavorites:read('musiclab-grip-favorites',[]),chromaticPattern:'1234',chromaticBpm:60,chromaticPlaying:false,chromaticHistory:read('musiclab-chromatic-history',[]),proInput:'F#m7 B7 EM7 C#m7',proPlan:null,proSelected:0,proBpm:80,proPlaying:false,proError:'',libRoot:'F#',libQuality:'m7',libBass:'',libString:'all',libSelected:0,libAdvanced:false,libFavorites:read('musiclab-lib-favorites',[]),libRecent:read('musiclab-lib-recent',[]),realFretMax:22,libFretOpen:false,guitarSightKey:'C-major',guitarSightLevel:1,guitarSightBpm:80,guitarSightPos:0,guitarSightExam:false,guitarSight:null,guitarSightIndex:0,guitarSightHits:0,guitarSightMistakes:0,guitarSightRetried:false,guitarSightStatus:'idle',guitarSightShowTab:false,guitarSightLast:'',guitarSightHistory:read('musiclab-guitar-sight',[]),guitarGripRootString:'R6',guitarGripQuality:'all',guitarGrip:chooseChord({root:'C',quality:'m7',rootString:'R6'}),guitarProgression:[],guitarCurrent:0,guitarRhythmBpm:80,guitarRhythmPattern:['D','-','D','U','D','-','D','U','D','-','D','U','D','-','D','U'],guitarRhythmPlaying:-1,selectedChord:0,earMode:'staff',clef:'treble',staffLevel:'chromatic',melodyInputs:[],earSession:{completed:0,correct:0},earHistory:read('musiclab-training-history',[]),question:null,feedback:null,reg:'m1',part:'folds',vocalView:'science',voiceStep:0,vocalLesson:'fold',vowelPreset:'a',voiceQuizIndex:0,voiceQuizChoice:null,voiceQuizScore:0,voiceTarget:read('musiclab-voice-target',60),voiceNotes:read('musiclab-voice-notes',''),larynxFocus:'all',larynxYaw:20,larynxPitch:43,larynxZoom:100,larynxAnimating:false,glottalOpen:30,jaw:55,tongue:50,lips:30,vocalF0:180,vocalBreath:24,compDegrees:[0,5,3,4],studioProject:read('musiclab-studio-active',null),studioProjects:read('musiclab-studio-projects',[]),studioSelected:[0,0],studioRollPage:0,studioLoop:false,studioError:'',backing:read('musiclab-backing',null),backingPlaying:false,backingBar:null,melodyNotes:read('musiclab-melody',[]),bpm:82,playing:-1,entries:read('musiclab-entries',[]),stats:read('musiclab-ear',{total:0,correct:0}),micActive:false,micError:''};
 const saveSettings=()=>localStorage.setItem('musiclab-settings',JSON.stringify({root:state.root,mode:state.mode,theme:state.theme}));
 const saveEntries=()=>localStorage.setItem('musiclab-entries',JSON.stringify(state.entries));
-let micStop=null,seqStop=null,larynxStop=null,voiceCompareTimer=null,guitarAudioTimers=[],guitarRhythmTimer=null,chromaticMetronomeStop=null;
+let micStop=null,seqStop=null,larynxStop=null,voiceCompareTimer=null,guitarAudioTimers=[],guitarRhythmTimer=null,chromaticMetronomeStop=null,backingPlayer=null;
 const icon=(n,size=20)=>{const p={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',theory:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 8h6M9 12h8"/>',guitar:'<path d="m13 6 5-5 5 5-5 5"/><path d="m4 20 9-9m-5-2 7 7M2 22l5-1-4-4-1 5Z"/>',ear:'<path d="M6 10a6 6 0 1 1 12 0c0 5-6 5-6 10M12 22h.01"/><path d="M9 10a3 3 0 0 1 6 0"/>',vocal:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8"/>',compose:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',journal:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/>',play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M9 5v14M15 5v14"/>',chevron:'<path d="m9 18 6-6-6-6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m17.07 7.07-1.41-1.41M6.34 6.34 4.93 4.93m14.14 0-1.41 1.41M6.34 17.66l-1.41 1.41"/>',moon:'<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13z"/>',spark:'<path d="m12 3 1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8z"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',mic:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/>',stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',check:'<path d="m4 12 5 5L20 6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 10v7m0-10v.1"/>',headphones:'<path d="M3 14v-3a9 9 0 0 1 18 0v3M3 14h4v7H5a2 2 0 0 1-2-2zm18 0h-4v7h2a2 2 0 0 0 2-2z"/>',layers:'<path d="m12 2 9 5-9 5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5M5 9a8 8 0 0 1 14-2l1 2M4 15l1 2a8 8 0 0 0 14-2"/>'}[n]||'<circle cx="12" cy="12" r="9"/>';return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`};
 const NAV=[['home','대시보드','home'],['theory','화성학 연구실','theory'],['guitar','기타 연습실','guitar'],['ear','청음 트레이너','ear'],['vocal','보컬 과학','vocal'],['compose','코드 스튜디오','compose'],['journal','연습 기록','journal']];
 const title=()=>NAV.find(n=>n[0]===state.tab)?.[1]||'Music Lab';
@@ -198,7 +199,7 @@ function guitarProgressionPro(){ensureProgression();const plan=state.proPlan||[]
  return `<section class="panel"><div class="panel-head"><div><span class="mini-label">PRACTICAL VOICE LEADING</span><h3>코드 진행 연습실</h3><p class="small-muted">코드 1~8개를 입력하면 손 이동을 고려한 보이싱을 추천해요.</p></div></div>
  <label class="pro-input-label" for="pro-chords">코드 진행 (공백으로 구분)</label><div class="pro-search"><input id="pro-chords" type="text" spellcheck="false" autocomplete="off" value="${safe(state.proInput)}" placeholder="F#m7 B7 EM7 C#m7"><button class="btn primary" data-action="pro-generate">운지 찾기</button></div>
  <div class="pro-presets">${presets.map(p=>`<button data-action="pro-preset" data-id="${p.id}">${p.label}</button>`).join('')}</div>
- <div class="pro-action-row"><label>BPM <input id="pro-bpm" type="number" value="${state.proBpm}" min="40" max="160" step="1"></label><button class="btn secondary" data-action="pro-play" ${plan.length?'':'disabled'}>${state.proPlaying?'■ 정지':'▶ 4박씩 재생'}</button></div>
+ <div class="pro-action-row"><label>BPM <input id="pro-bpm" type="number" value="${state.proBpm}" min="40" max="160" step="1"></label><button class="btn secondary" data-action="pro-play" ${plan.length?'':'disabled'}>${state.proPlaying?'■ 정지':'▶ 4박씩 재생'}</button><button class="btn secondary" data-action="pro-send-studio" ${plan.length?'':'disabled'}>이 진행으로 반주 만들기 →</button></div>
  ${state.proError?`<div class="pro-error" role="alert">${safe(state.proError)}</div>`:''}
  ${plan.length?`<div class="pro-progression">${plan.map((p,i)=>`<button class="pro-chord-tile ${state.proSelected===i?'active':''}" data-action="pro-select" data-index="${i}"><small>BAR ${i+1}</small><strong>${safe(p.chord.name)}</strong><span>${p.grip.rootString} · ${p.grip.rootFret}fr</span></button>`).join('')}</div>
  <div class="pro-detail"><div><h3>${safe(chosen.chord.name)} · 추천 운지</h3><p>다른 코드로 바꿀 때 프렛 이동과 운지 범위를 함께 고려한 예시예요. 반드시 유일한 정답은 아니에요.</p><div class="lib-role-row">${chosen.chord.parts.map(x=>`<span class="lib-interval"><b>${safe(x.tag)}</b>${safe(x.name)}</span>`).join('')}</div><button class="btn secondary" data-action="pro-play-one">${icon('play',16)} 이 코드 듣기</button></div>${chordDiagramSVG(chosen.grip,chosen.chord)}</div>
@@ -409,22 +410,58 @@ function vocalPractice(){const tgt=Number.isInteger(state.voiceTarget)?state.voi
 ${infoBox('녹음이나 분석 중 통증·어지러움·목소리 이상이 느껴지면 즉시 멈추세요. 강하게 밀어붙이거나 오래 소리를 유지해야 하는 훈련은 필요하지 않습니다.')}`;}
 function vocal(){return `${pageHeader('VOICE SCIENCE / ALPHA ${APP_VERSION}','보컬 연구실','성대가 어떻게 소리를 만드는지 배우고, 직접 소리를 들어보고, 내 목소리도 확인해요.')}${vocalViewNav()}${vocalSteps()}${state.vocalView==='science'?vocalScience():state.vocalView==='listen'?vocalListen():vocalPractice()}`;}
 function ensureStudio(){try{state.studioProject=normalizeStudioProject(state.studioProject||newStudioProject(state.root,state.mode,state.bpm))}catch{state.studioProject=newStudioProject(state.root,state.mode,state.bpm)}return state.studioProject;}
-function persistStudio(){if(state.studioProject)state.studioProject.melody=state.melodyNotes.map(x=>({midi:x.midi,step:x.step}));localStorage.setItem('musiclab-studio-active',JSON.stringify(state.studioProject));localStorage.setItem('musiclab-melody',JSON.stringify(state.melodyNotes));}
-function studioStop(){if(seqStop){seqStop();seqStop=null;}stopAllScheduled();state.playing=-1;}
-function studioRender(){persistStudio();render();}
-function studioPlayback(){studioStop();const p=ensureStudio(),events=studioEvents(p),ctx=context(),beat=60/p.bpm,start=ctx.currentTime+.12;let timers=[],active=true;
- for(const ev of events){for(const midi of studioVoicing(ev.symbol,ev.voicing)){note(midi,start+ev.start*beat,ev.beats*beat*.90,{volume:.16});}
-  timers.push(setTimeout(()=>{if(active&&state.tab==='compose'){state.playing=ev.bar;document.querySelectorAll('.studio092-bar').forEach((b,i)=>b.classList.toggle('playing',i===ev.bar))}},(ev.start*beat+.12)*1000));}
- for(const x of state.melodyNotes){if(Number.isInteger(x.step)&&x.step>=0&&x.step<p.bars.length*4)note(x.midi,start+x.step*beat,beat*.85,{volume:.15});}
- timers.push(setTimeout(()=>{if(active){active=false;state.playing=-1;document.querySelectorAll('.studio092-bar').forEach(b=>b.classList.remove('playing'));seqStop=null}},(p.bars.length*4*beat+.2)*1000));
- seqStop=()=>{active=false;timers.forEach(clearTimeout);stopAllScheduled();state.playing=-1;};
+function persistStudio(){if(state.studioProject){state.melodyNotes=state.melodyNotes.filter(x=>Number.isInteger(x.step)&&x.step>=0&&x.step<state.studioProject.bars.length*4&&Number.isInteger(x.midi)&&x.midi>=48&&x.midi<=83).slice(0,256);state.studioProject.melody=state.melodyNotes.map(x=>({midi:x.midi,step:x.step}));}localStorage.setItem('musiclab-studio-active',JSON.stringify(state.studioProject));localStorage.setItem('musiclab-melody',JSON.stringify(state.melodyNotes));}
+function studioStop(){
+ if(backingPlayer){const b=backingPlayer;backingPlayer=null;b.stop();}
+ state.backingPlaying=false;state.backingBar=null;
+ if(seqStop){seqStop();seqStop=null;}
+ stopAllScheduled();state.playing=-1;
 }
-function studioSaveNamed(){const p=ensureStudio();if(!p.title.trim())p.title='새 코드 진행';const copy=cloneProject(p);const now=new Date().toISOString();const existing=state.studioProjects.findIndex(x=>x.title===copy.title);const record={...copy,melody:state.melodyNotes.map(x=>({midi:x.midi,step:x.step})),updatedAt:now};if(existing>=0)state.studioProjects.splice(existing,1);state.studioProjects=[record,...state.studioProjects].slice(0,20);localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects));studioRender();}
+function backingPersist(){localStorage.setItem('musiclab-backing',JSON.stringify(state.backing));}
+function backingIndicator(bar=null){
+ const label=$('#backing-status');if(label)label.textContent=state.backingPlaying?(bar?'연주 중 · '+bar+'마디':'재생 준비 중'):'정지됨';
+ document.querySelectorAll('.studio092-bar').forEach((el,i)=>el.classList.toggle('backing-active',bar===i+1));
+ const play=$('[data-action="studio-backing-toggle"]');if(play)play.textContent=state.backingPlaying?'■ 반주 정지':'▶ 반주 시작';
+}
+function studioBackingToggle(){
+ if(backingPlayer){studioStop();backingIndicator();return;}
+ studioStop();const project=ensureStudio();
+ const config=normalizeBacking(state.backing,project.bars.length);state.backing=config;backingPersist();
+ try{
+  backingPlayer=startBackingTrack({context:context(),project,settings:config,playPiano:note,
+   onBar:bar=>{state.backingBar=bar;backingIndicator(bar);},
+   onEnd:()=>{backingPlayer=null;state.backingPlaying=false;state.backingBar=null;backingIndicator();}});
+  state.backingPlaying=true;backingIndicator();
+ }catch(e){state.studioError=String(e?.message||e);state.backingPlaying=false;render();}
+}
+
+function studioRender(){persistStudio();render();}
+function studioPlayback(){
+ studioStop();const p=ensureStudio(),events=studioEvents(p),beat=60/p.bpm,duration=p.bars.length*4*beat;
+ let timers=[],active=true;
+ function cycle(){if(!active||state.tab!=='compose')return;
+  const start=context().currentTime+.12;
+  for(const ev of events){for(const midi of studioVoicing(ev.symbol,ev.voicing))note(midi,start+ev.start*beat,ev.beats*beat*.90,{volume:.16});
+   timers.push(setTimeout(()=>{if(!active||state.tab!=='compose')return;state.playing=ev.bar;document.querySelectorAll('.studio092-bar').forEach((b,i)=>b.classList.toggle('playing',i===ev.bar));},(ev.start*beat+.12)*1000));}
+  for(const x of state.melodyNotes){if(Number.isInteger(x.step)&&x.step>=0&&x.step<p.bars.length*4)note(x.midi,start+x.step*beat,beat*.85,{volume:.15});}
+  timers.push(setTimeout(()=>{if(!active)return;state.playing=-1;document.querySelectorAll('.studio092-bar').forEach(b=>b.classList.remove('playing'));if(state.studioLoop){timers=[];cycle();}else{active=false;seqStop=null;}},(duration+.18)*1000));
+ }
+ seqStop=()=>{active=false;timers.forEach(clearTimeout);timers=[];stopAllScheduled();state.playing=-1;};
+ cycle();
+}
+function studioSaveNamed(){const p=ensureStudio();if(!p.title.trim())p.title='새 코드 진행';const copy=cloneProject(p);const now=new Date().toISOString();const existing=state.studioProjects.findIndex(x=>x.title===copy.title);const record={...copy,melody:state.melodyNotes.map(x=>({midi:x.midi,step:x.step})),backing:normalizeBacking(state.backing,copy.bars.length),updatedAt:now};if(existing>=0)state.studioProjects.splice(existing,1);state.studioProjects=[record,...state.studioProjects].slice(0,20);localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects));studioRender();}
 function compose(){const p=ensureStudio(),[currentBar,currentSlot]=state.studioSelected,active=p.bars[currentBar]?.segments[currentSlot]||p.bars[0].segments[0],suggestions=studioSuggestions(p);
- return `${pageHeader('CHORD STUDIO 2.0 / ALPHA '+APP_VERSION,'코드 스튜디오','코드를 자유롭게 입력하고 길이·전위를 조절하면서 작곡하세요.')}
+ const bk=normalizeBacking(state.backing,p.bars.length),barOptions=Array.from({length:p.bars.length},(_,i)=>i+1);state.backing=bk;
+ return `${pageHeader('CHORD STUDIO 2.0 / ALPHA '+APP_VERSION,'코드 스튜디오','코드를 편집하고 16마디까지 멜로디를 더해 MIDI로 내보내세요.')}
  <section class="panel studio092-head"><div class="studio092-heading"><div><span class="mini-label">MY CHORD PROJECT</span><label class="studio092-project-label">프로젝트 이름<input id="studio-title" maxlength="70" value="${safe(p.title)}" aria-label="프로젝트 이름"></label></div><span class="pill">4/4 · ${p.bars.length}마디</span></div>
- <div class="studio092-toolbar"><label>BPM<input type="number" id="studio-bpm" min="40" max="220" value="${p.bpm}"></label>${btn('studio-play',`${icon('play',17)} 전체 재생`)}${btn('studio-stop','■ 정지','btn secondary')}${btn('studio-midi',`${icon('download',17)} MIDI`,'btn secondary')}</div>
- <div class="studio092-project-actions">${btn('studio-save','프로젝트 저장','btn secondary')}${btn('studio-new','새 프로젝트','btn ghost dark')}${btn('studio-add-bar','+ 마디 추가','btn secondary')}${btn('studio-remove-bar','− 마지막 마디 삭제','btn ghost dark')}</div>
+ <div class="studio092-toolbar"><label>BPM<input type="number" id="studio-bpm" min="40" max="220" value="${p.bpm}"></label>${btn('studio-play',`${icon('play',17)} 전체 재생`)}${btn('studio-stop','■ 정지','btn secondary')}<label class="studio093-loop"><input type="checkbox" id="studio-loop" ${state.studioLoop?'checked':''}> 반복 재생</label>${btn('studio-midi',`${icon('download',17)} MIDI`,'btn secondary')}</div>
+ <section class="backing-lab" aria-labelledby="backing-heading"><div class="backing-heading"><div><span class="mini-label">BACKING TRACK LAB · NEW</span><h3 id="backing-heading">코드 진행을 반주로 연습</h3><p>현재 프로젝트의 코드를 드럼·베이스·피아노로 재생해요. 원하는 구간을 반복하면서 기타를 연습하세요.</p></div><div class="backing-control"><button type="button" class="btn primary" data-action="studio-backing-toggle">${state.backingPlaying?'■ 반주 정지':'▶ 반주 시작'}</button><span id="backing-status" role="status">${state.backingPlaying?(state.backingBar?`연주 중 · ${state.backingBar}마디`:'재생 준비 중'):'정지됨'}</span></div></div>
+ <div class="backing-options"><label>반주 스타일<select id="backing-style">${Object.entries(BACKING_STYLES).map(([key,style])=>`<option value="${key}" ${bk.style===key?'selected':''}>${style.label}</option>`).join('')}</select></label><label>시작 마디<select id="backing-start">${barOptions.map(n=>`<option value="${n}" ${bk.startBar===n?'selected':''}>${n}마디</option>`).join('')}</select></label><label>마지막 마디<select id="backing-end">${barOptions.filter(n=>n>=bk.startBar).map(n=>`<option value="${n}" ${bk.endBar===n?'selected':''}>${n}마디</option>`).join('')}</select></label></div>
+ <p class="backing-style-desc">${safe(BACKING_STYLES[bk.style].desc)} · BPM은 위의 코드 스튜디오 설정을 사용합니다.</p>
+ <div class="backing-checks"><label><input type="checkbox" id="backing-loop" ${bk.loop?'checked':''}> 구간 반복</label><label><input type="checkbox" id="backing-countin" ${bk.countIn?'checked':''}> 시작 전 4박 카운트인</label></div>
+ <div class="backing-mixer">${[['drums','드럼'],['bass','베이스'],['piano','피아노']].map(([key,name])=>`<label><span>${name} <output id="backing-label-${key}">${bk.mix[key]}%</output></span><input type="range" min="0" max="100" step="5" value="${bk.mix[key]}" data-backing-mix="${key}" aria-label="${name} 음량"></label>`).join('')}</div>
+ <p class="small-muted">반주는 새 음원 다운로드 없이 브라우저에서 생성됩니다. 드럼과 베이스는 합성음, 피아노는 기존 실제 샘플을 사용해요.</p></section>
+ <div class="studio092-project-actions">${btn('studio-save','프로젝트 저장','btn secondary')}${btn('studio-new','새 프로젝트','btn ghost dark')}${btn('studio-add-bar','+ 마디 추가','btn secondary')}${btn('studio-duplicate-bar','선택 마디 복제','btn secondary')}${btn('studio-remove-bar','− 마지막 마디 삭제','btn ghost dark')}</div>
  <div class="studio092-bulk"><label for="studio-bulk">진행을 한 번에 입력</label><div><input id="studio-bulk" type="text" autocomplete="off" spellcheck="false" placeholder="F#m7 B7 EM7 C#m7"><button class="btn secondary" data-action="studio-bulk-apply">진행 만들기</button></div><small>코드를 공백 또는 →로 구분 · 1코드 = 1마디 · 최대 16마디</small></div>
  <p class="small-muted">마디를 누르면 편집할 수 있어요. 코드 이름은 <b>F#m7, BbM7, C7(#9), C/E</b>처럼 직접 입력할 수 있어요.</p>
  <div class="studio092-bars">${p.bars.map((bar,b)=>`<div class="studio092-bar ${state.playing===b?'playing':''}"><div class="studio092-bar-head"><span>BAR ${String(b+1).padStart(2,'0')}</span><span>4/4</span></div><div class="studio092-segments">${bar.segments.map((seg,i)=>`<button type="button" class="studio092-slot ${currentBar===b&&currentSlot===i?'selected':''}" data-action="studio-select" data-bar="${b}" data-slot="${i}" style="flex:${seg.beats}"><strong>${safe(seg.symbol)}</strong><small>${seg.beats}박 · ${seg.voicing===0?'기본형':seg.voicing+'전위'}</small></button>`).join('')}</div></div>`).join('')}</div>
@@ -437,7 +474,10 @@ function compose(){const p=ensureStudio(),[currentBar,currentSlot]=state.studioS
  ${state.studioError?`<p class="studio092-error" role="alert">${safe(state.studioError)}</p>`:''}</section>
  <div class="two-col studio092-bottom"><section class="panel"><div class="panel-head"><div><span class="mini-label">HARMONY IDEAS</span><h3>진행 프리셋</h3></div></div><div class="preset-list">${Object.keys(STUDIO_PRESETS).map(name=>`<button class="preset" data-action="studio-preset" data-name="${safe(name)}"><span>${safe(name)}</span>${icon('chevron',18)}</button>`).join('')}</div><p class="small-muted">프리셋을 선택하면 현재 마디를 4마디 진행으로 변경해요.</p></section>
  <section class="panel"><div class="panel-head"><div><span class="mini-label">MY PROJECTS</span><h3>저장한 프로젝트</h3></div></div><div class="studio092-saved">${state.studioProjects.length?state.studioProjects.map((x,i)=>`<div><button data-action="studio-load" data-index="${i}"><b>${safe(x.title)}</b><small>${x.bars.length}마디 · ${x.bpm}BPM</small></button><button class="studio092-delete" data-action="studio-delete" data-index="${i}" aria-label="${safe(x.title)} 삭제">삭제</button></div>`).join(''):'<p class="small-muted">저장한 프로젝트가 아직 없어요.</p>'}</div></section></div>
- <details class="panel studio092-melody"><summary>기존 4마디 멜로디 피아노 롤 (선택)</summary><p class="small-muted">피아노 롤은 아직 첫 4마디를 편집해요. 입력한 음은 전체 진행 MIDI의 별도 멜로디 트랙으로 저장됩니다.</p>${pianoRollSVG(Array.from({length:4},(_,i)=>studioVoicing(p.bars[i]?.segments[0]?.symbol||p.bars[0].segments[0].symbol)),state.melodyNotes)}<div class="studio092-melody-actions">${btn('roll-clear','멜로디 지우기','btn secondary')}${btn('studio-midi','코드 + 멜로디 MIDI 저장','btn primary')}</div></details>
+ <details class="panel studio092-melody"><summary>멜로디 피아노 롤 · 최대 16마디 편집</summary><p class="small-muted">4마디씩 이동하며 음을 넣거나 다시 누르면 지울 수 있어요. 메인 화면의 코드 진행과 별도 멜로디 MIDI 트랙에 함께 반영돼요.</p>
+ <div class="studio093-roll-nav"><button type="button" data-action="studio-roll-prev" ${state.studioRollPage<=0?'disabled':''}>← 이전 4마디</button><span>${state.studioRollPage*4+1}–${Math.min((state.studioRollPage+1)*4,p.bars.length)}마디 / 총 ${p.bars.length}마디</span><button type="button" data-action="studio-roll-next" ${state.studioRollPage>=Math.ceil(p.bars.length/4)-1?'disabled':''}>다음 4마디 →</button></div>
+ ${pianoRollSVG(Array.from({length:4},(_,i)=>p.bars[state.studioRollPage*4+i]?studioVoicing(p.bars[state.studioRollPage*4+i].segments[0].symbol):[]),state.melodyNotes,state.studioRollPage*4)}
+ <div class="studio092-melody-actions">${btn('studio-roll-clear-page','현재 구간의 멜로디 지우기','btn secondary')}${btn('roll-clear','전체 멜로디 지우기','btn secondary')}${btn('studio-midi','코드 + 멜로디 MIDI 저장','btn primary')}</div></details>
  ${infoBox('작업은 자동으로 이 브라우저에 임시 저장돼요. 별도 프로젝트로 보관하려면 「프로젝트 저장」을 누르세요. 크로매틱·청각훈련과 기타 기록은 기존대로 유지됩니다.')}`;
 }
 function journal(){const sorted=[...state.entries].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12),today=new Date().toLocaleDateString('sv-SE');
@@ -464,7 +504,7 @@ function render(){
  if(state.tab==='vocal')requestAnimationFrame(()=>updateLarynx());
  updatePianoIndicator();
 }
-function navTo(id){stopGuitarAudio();if(voiceCompareTimer){clearTimeout(voiceCompareTimer);voiceCompareTimer=null;}if(recordingSlot())stopRecording();if(larynxStop){larynxStop();larynxStop=null;}state.larynxAnimating=false;if(!NAV.some(n=>n[0]===id))return;if(micStop){micStop();micStop=null;state.micActive=false;}if(seqStop){seqStop();seqStop=null}state.playing=-1;state.tab=id;state.micError='';render();window.scrollTo({top:0,behavior:'instant'});}
+function navTo(id){stopGuitarAudio();if(voiceCompareTimer){clearTimeout(voiceCompareTimer);voiceCompareTimer=null;}if(recordingSlot())stopRecording();if(larynxStop){larynxStop();larynxStop=null;}state.larynxAnimating=false;if(!NAV.some(n=>n[0]===id))return;if(micStop){micStop();micStop=null;state.micActive=false;}if(backingPlayer)studioStop();if(seqStop){seqStop();seqStop=null}state.playing=-1;state.tab=id;state.micError='';render();window.scrollTo({top:0,behavior:'instant'});}
 function playScale(){const sc=scaleOf(state.root,state.tab==='theory'?state.theoryScale:state.mode),oct=state.tab==='theory'?state.theoryOctave:4;arpeggio([...sc.notes.map(n=>noteToMidi(n,oct)),noteToMidi(sc.notes[0],oct+1)],.19)}
 function handleAction(target,e){const a=target.dataset.action;
  if(a==='harmony-next'){generateHarmony();render();return;}
@@ -472,8 +512,12 @@ function handleAction(target,e){const a=target.dataset.action;
  if(a?.startsWith('studio-')){
   const p=ensureStudio(),bar=Number(state.studioSelected[0]),slot=Number(state.studioSelected[1]);state.studioError='';
   try{
+   if(a==='studio-loop-toggle'){state.studioLoop=!state.studioLoop;render();return;}
+   if(a==='studio-roll-prev'||a==='studio-roll-next'){const maxPage=Math.ceil(p.bars.length/4)-1;state.studioRollPage=Math.max(0,Math.min(maxPage,state.studioRollPage+(a==='studio-roll-next'?1:-1)));studioRender();document.querySelector('.studio092-melody')?.setAttribute('open','');return;}
+   if(a==='studio-roll-clear-page'){state.melodyNotes=state.melodyNotes.filter(x=>x.step<state.studioRollPage*16||x.step>=(state.studioRollPage+1)*16);studioRender();document.querySelector('.studio092-melody')?.setAttribute('open','');return;}
    if(a==='studio-select'){state.studioSelected=[Number(target.dataset.bar),Number(target.dataset.slot)];render();return;}
    if(a==='studio-stop'){studioStop();render();return;}
+   if(a==='studio-backing-toggle'){studioBackingToggle();return;}
    if(a==='studio-play'){studioPlayback();return;}
    if(a==='studio-play-one'){const cur=p.bars[bar]?.segments[slot];if(cur)chord(studioVoicing(cur.symbol,cur.voicing),undefined,.95);return;}
    if(a==='studio-midi'){downloadMidi(buildStudioMidi(p,state.melodyNotes),'music-lab-studio.mid');return;}
@@ -483,7 +527,7 @@ function handleAction(target,e){const a=target.dataset.action;
     if(chunks.length<1||chunks.length>16)throw Error('코드는 1~16개까지 입력할 수 있어요.');
     const parsed=chunks.map(x=>{const c=parseChord(x);if(!c)throw Error('지원되지 않는 코드: '+x);return c.name;});
     if(!confirm('현재 진행을 입력한 코드로 바꿀까요?'))return;
-    studioStop();state.studioProject=normalizeStudioProject({...p,bars:parsed.map(symbol=>({segments:[{symbol,beats:4,voicing:0}]}))});state.studioSelected=[0,0];studioRender();return;
+    studioStop();state.studioProject=normalizeStudioProject({...p,bars:parsed.map(symbol=>({segments:[{symbol,beats:4,voicing:0}]}))});state.studioSelected=[0,0];state.studioRollPage=0;state.backing=normalizeBacking({...state.backing,startBar:1,endBar:state.studioProject.bars.length},state.studioProject.bars.length);backingPersist();studioRender();return;
    }
    if(a==='studio-set-code'){state.studioProject=setStudioChord(p,bar,slot,$('#studio-code')?.value||'');studioRender();return;}
    if(a==='studio-suggest'){state.studioProject=setStudioChord(p,bar,slot,target.dataset.symbol);studioRender();return;}
@@ -494,12 +538,13 @@ function handleAction(target,e){const a=target.dataset.action;
     if(slot+1>=items.length||items[slot].beats+delta<1||items[slot+1].beats-delta<1){state.studioError='길이를 조절하려면 선택한 코드 뒤에 다른 코드가 있어야 하고, 각 코드는 최소 1박이어야 해요.';render();return;}
     items[slot].beats+=delta;items[slot+1].beats-=delta;state.studioProject=normalizeStudioProject(draft);studioRender();return;
    }
-   if(a==='studio-add-bar'){state.studioProject=addBar(p);studioRender();return;}
-   if(a==='studio-remove-bar'){state.studioProject=removeBar(p,p.bars.length-1);state.studioSelected=[0,0];studioRender();return;}
-   if(a==='studio-new'){if(!confirm('새 프로젝트를 만들까요? 저장하지 않은 현재 진행은 교체됩니다.'))return;studioStop();state.studioProject=newStudioProject(state.root,state.mode,state.bpm);state.studioSelected=[0,0];state.melodyNotes=[];studioRender();return;}
-   if(a==='studio-preset'){if(!confirm('현재 진행을 '+target.dataset.name+' 프리셋으로 바꿀까요?'))return;studioStop();state.studioProject=applyStudioPreset(p,target.dataset.name);state.studioSelected=[0,0];studioRender();return;}
+   if(a==='studio-add-bar'){state.studioProject=addBar({...p,melody:state.melodyNotes});studioRender();return;}
+   if(a==='studio-duplicate-bar'){studioStop();state.studioProject=duplicateBar({...p,melody:state.melodyNotes},bar);state.melodyNotes=state.studioProject.melody||[];state.studioSelected=[Math.min(bar+1,state.studioProject.bars.length-1),0];studioRender();return;}
+   if(a==='studio-remove-bar'){state.studioProject=removeBar({...p,melody:state.melodyNotes},p.bars.length-1);state.melodyNotes=state.studioProject.melody||[];state.studioRollPage=Math.min(state.studioRollPage,Math.ceil(state.studioProject.bars.length/4)-1);state.studioSelected=[0,0];studioRender();return;}
+   if(a==='studio-new'){if(!confirm('새 프로젝트를 만들까요? 저장하지 않은 현재 진행은 교체됩니다.'))return;studioStop();state.studioProject=newStudioProject(state.root,state.mode,state.bpm);state.studioSelected=[0,0];state.studioRollPage=0;state.melodyNotes=[];studioRender();return;}
+   if(a==='studio-preset'){if(!confirm('현재 진행을 '+target.dataset.name+' 프리셋으로 바꿀까요?'))return;studioStop();state.studioProject=applyStudioPreset(p,target.dataset.name);state.studioSelected=[0,0];state.studioRollPage=0;studioRender();return;}
    if(a==='studio-save'){studioSaveNamed();return;}
-   if(a==='studio-load'){const x=state.studioProjects[Number(target.dataset.index)];if(!x)return;if(!confirm('선택한 저장 프로젝트를 불러올까요?'))return;studioStop();state.studioProject=normalizeStudioProject(x);state.studioSelected=[0,0];state.melodyNotes=state.studioProject.melody||[];studioRender();return;}
+   if(a==='studio-load'){const x=state.studioProjects[Number(target.dataset.index)];if(!x)return;if(!confirm('선택한 저장 프로젝트를 불러올까요?'))return;studioStop();state.studioProject=normalizeStudioProject(x);state.backing=normalizeBacking(x.backing||state.backing,state.studioProject.bars.length);backingPersist();state.studioSelected=[0,0];state.studioRollPage=0;state.melodyNotes=state.studioProject.melody||[];studioRender();return;}
    if(a==='studio-delete'){const i=Number(target.dataset.index);if(!state.studioProjects[i]||!confirm('저장된 프로젝트를 삭제할까요?'))return;state.studioProjects.splice(i,1);localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects));render();return;}
   }catch(err){state.studioError=err.message||'편집에 실패했어요.';render();return;}
  }
@@ -543,6 +588,15 @@ function handleAction(target,e){const a=target.dataset.action;
  if(a==='pro-preset'){const p=PROGRESSION_PRESETS.find(x=>x.id===target.dataset.id);if(!p)return;stopGuitarAudio();state.proInput=p.text;state.proPlan=null;state.proError='';state.proSelected=0;ensureProgression();render();return;}
  if(a==='pro-select'){const i=Number(target.dataset.index);if(!state.proPlan?.[i])return;state.proSelected=i;render();return;}
  if(a==='pro-play'){playPlannedProgression();return;}
+  if(a==='pro-send-studio'){
+   ensureProgression();const plan=state.proPlan||[];if(!plan.length)return;
+   if(!confirm('선택한 기타 코드 진행으로 코드 스튜디오 프로젝트를 새로 만들까요? 현재 편집 중인 진행은 교체됩니다.'))return;
+   stopGuitarAudio();studioStop();
+   const draft=newStudioProject(state.root,state.mode,state.proBpm);
+   draft.title='기타 반주 연습';draft.bars=plan.map(x=>({segments:[{symbol:x.chord.name,beats:4,voicing:0}]}));
+   state.studioProject=normalizeStudioProject(draft);state.melodyNotes=[];state.studioRollPage=0;state.studioSelected=[0,0];
+   state.backing=normalizeBacking({...state.backing,startBar:1,endBar:draft.bars.length},draft.bars.length);backingPersist();persistStudio();navTo('compose');return;
+  }
  if(a==='pro-play-one'){const g=state.proPlan?.[state.proSelected]?.grip;if(g)chord(gripMidis(g),undefined,.9);return;}
  if(a==='chromatic-toggle'){state.chromaticPlaying?(stopGuitarAudio(),render()):startChromatic();return;}
  if(a==='chromatic-preset'){if(!CHROMATIC_PATTERNS.includes(target.dataset.pattern))return;state.chromaticPattern=target.dataset.pattern;render();return;}
@@ -654,20 +708,20 @@ function handleAction(target,e){const a=target.dataset.action;
   },state.melodyNotes);
  }
  else if(a==='midi-download'){downloadMidi(buildMidi(state.root,state.mode,state.compDegrees,state.bpm,state.melodyNotes))}
- else if(a==='roll-clear'){state.melodyNotes=[];localStorage.setItem('musiclab-melody','[]');persistStudio();render()}
+ else if(a==='roll-clear'){state.melodyNotes=[];persistStudio();render();document.querySelector('.studio092-melody')?.setAttribute('open','')}
  else if(a==='roll-click'){
   const svg=target.closest('svg');if(!svg)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
-  const step=Math.floor((p.x-53)/32),midi=83-Math.floor((p.y-18)/10);if(step<0||step>15||midi<48||midi>83)return;
+  const step=state.studioRollPage*16+Math.floor((p.x-53)/32),midi=83-Math.floor((p.y-18)/10);if(step<state.studioRollPage*16||step>=(state.studioRollPage+1)*16||step>=ensureStudio().bars.length*4||midi<48||midi>83)return;
   const j=state.melodyNotes.findIndex(x=>x.step===step&&x.midi===midi);
   if(j>=0)state.melodyNotes.splice(j,1);else{state.melodyNotes=state.melodyNotes.filter(x=>x.step!==step);state.melodyNotes.push({step,midi})}
-  localStorage.setItem('musiclab-melody',JSON.stringify(state.melodyNotes));persistStudio();note(midi);render();
+  persistStudio();note(midi);render();document.querySelector('.studio092-melody')?.setAttribute('open','');
  }
  else if(a==='comp-stop'){if(seqStop)seqStop();seqStop=null;stopAllScheduled();state.playing=-1;render()}
  else if(a==='comp-random'){state.compDegrees=Array.from({length:4},()=>Math.floor(Math.random()*7));render()}
  else if(a==='comp-preset'){state.compDegrees=[[0,4,5,3],[0,5,3,4],[1,4,0,5]][Number(target.dataset.id)].slice();render()}
  else if(a==='delete-entry'){state.entries=state.entries.filter(e=>String(e.id)!==target.dataset.id);saveEntries();render()}
  else if(a==='export'){
-  const payload={version:7,studio:{...ensureStudio(),melody:state.melodyNotes},studioProjects:state.studioProjects,harmonyHistory:state.harmonyHistory,problemRecent:state.problemRecent,guitarTheory:state.theoryHistory,favoriteGrips:state.libGripFavorites,chromatic:state.chromaticHistory,favoriteChords:state.libFavorites,recentChords:state.libRecent,guitarSight:state.guitarSightHistory,exportedAt:new Date().toISOString(),entries:state.entries,ear:state.stats,training:state.earHistory,voiceNotes:state.voiceNotes,voiceTarget:state.voiceTarget};
+  const payload={version:8,backing:normalizeBacking(state.backing,ensureStudio().bars.length),studio:{...ensureStudio(),melody:state.melodyNotes},studioProjects:state.studioProjects,harmonyHistory:state.harmonyHistory,problemRecent:state.problemRecent,guitarTheory:state.theoryHistory,favoriteGrips:state.libGripFavorites,chromatic:state.chromaticHistory,favoriteChords:state.libFavorites,recentChords:state.libRecent,guitarSight:state.guitarSightHistory,exportedAt:new Date().toISOString(),entries:state.entries,ear:state.stats,training:state.earHistory,voiceNotes:state.voiceNotes,voiceTarget:state.voiceTarget};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),el=document.createElement('a');el.href=url;el.download='music-lab-backup.json';el.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
 }
@@ -710,6 +764,16 @@ document.addEventListener('change',async e=>{
  else if(t.id==='theory-scale'){if(THEORY_SCALES.some(x=>x[0]===t.value))state.theoryScale=t.value;render();}
  else if(t.id==='theory-octave'){state.theoryOctave=[3,4,5].includes(Number(t.value))?Number(t.value):4;render();}
  else if(t.id==='harmony-level'){state.harmonyLevel=Math.max(1,Math.min(3,Number(t.value)||1));state.harmonyQuestion=null;state.harmonyAnswer=null;render();}
+ else if(t.id==='studio-loop'){state.studioLoop=t.checked;render();}
+  else if(t.id==='backing-style'||t.id==='backing-start'||t.id==='backing-end'||t.id==='backing-loop'||t.id==='backing-countin'){
+   studioStop();const cfg={...state.backing};
+   if(t.id==='backing-style')cfg.style=t.value;
+   else if(t.id==='backing-start'){cfg.startBar=Number(t.value);cfg.endBar=Math.max(cfg.startBar,cfg.endBar);}
+   else if(t.id==='backing-end')cfg.endBar=Number(t.value);
+   else if(t.id==='backing-loop')cfg.loop=t.checked;
+   else if(t.id==='backing-countin')cfg.countIn=t.checked;
+   state.backing=normalizeBacking(cfg,ensureStudio().bars.length);backingPersist();render();
+  }
  else if(t.id==='studio-voicing'){const p=ensureStudio(),[b,i]=state.studioSelected;state.studioProject=setStudioVoicing(p,b,i,Number(t.value));studioRender();}
  else if(t.id==='studio-bpm'){const p=ensureStudio();p.bpm=Math.max(40,Math.min(220,Math.round(Number(t.value)||82)));state.studioProject=normalizeStudioProject(p);studioStop();studioRender();}
  else if(t.id==='studio-title'){const p=ensureStudio();p.title=String(t.value||'새 코드 진행').slice(0,70);state.studioProject=p;persistStudio();}
@@ -749,7 +813,7 @@ document.addEventListener('change',async e=>{
    const valid=data.entries.length<=10000&&data.entries.every(e=>typeof e.date==='string'&&typeof e.category==='string'&&typeof e.minutes==='number'&&typeof e.memo==='string'&&String(e.memo).length<=1500);
    if(!valid)throw new Error('데이터 형식이 올바르지 않습니다.');
    if(!confirm('현재의 연습 기록과 청음 통계를 백업 파일로 교체할까요?'))return;
-   state.entries=data.entries;if(data.studio){try{state.studioProject=normalizeStudioProject(data.studio);state.melodyNotes=state.studioProject.melody||[];persistStudio()}catch{}}if(Array.isArray(data.studioProjects)){state.studioProjects=data.studioProjects.slice(0,20).flatMap(x=>{try{return [normalizeStudioProject(x)]}catch{return []}});localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects))}if(Array.isArray(data.harmonyHistory)){state.harmonyHistory=data.harmonyHistory.filter(x=>typeof x==='string').slice(-40);localStorage.setItem('musiclab-harmony-questions',JSON.stringify(state.harmonyHistory));}if(Array.isArray(data.problemRecent)){state.problemRecent=data.problemRecent.filter(x=>typeof x==='string').slice(-50);localStorage.setItem('musiclab-problem-recent',JSON.stringify(state.problemRecent));}if(Array.isArray(data.guitarTheory)){state.theoryHistory=data.guitarTheory.slice(-500).filter(x=>typeof x.date==='string'&&typeof x.root==='string'&&['caged','triad','arp','drop'].includes(x.mode));localStorage.setItem('musiclab-guitar-theory-history',JSON.stringify(state.theoryHistory));}if(Array.isArray(data.favoriteGrips)){state.libGripFavorites=data.favoriteGrips.slice(0,60).filter(g=>typeof g.name==='string'&&Array.isArray(g.frets)&&g.frets.length===6&&g.frets.every(f=>f===null||(Number.isInteger(f)&&f>=0&&f<=22)));localStorage.setItem('musiclab-grip-favorites',JSON.stringify(state.libGripFavorites));}if(Array.isArray(data.favoriteChords)){state.libFavorites=data.favoriteChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,100);libraryFavoritesSave();}if(Array.isArray(data.recentChords)){state.libRecent=data.recentChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,12);localStorage.setItem('musiclab-lib-recent',JSON.stringify(state.libRecent));}if(Array.isArray(data.chromatic)){state.chromaticHistory=data.chromatic.slice(-500).filter(x=>typeof x.date==='string'&&CHROMATIC_PATTERNS.includes(x.pattern)&&Number.isFinite(x.bpm));localStorage.setItem('musiclab-chromatic-history',JSON.stringify(state.chromaticHistory));}if(Array.isArray(data.guitarSight)){state.guitarSightHistory=data.guitarSight.slice(-300).filter(x=>Number.isFinite(x.accuracy)&&typeof x.date==='string');localStorage.setItem('musiclab-guitar-sight',JSON.stringify(state.guitarSightHistory));}if(Array.isArray(data.training)){state.earHistory=data.training.slice(-3000).filter(x=>typeof x.date==='string'&&typeof x.kind==='string'&&typeof x.correct==='boolean');localStorage.setItem('musiclab-training-history',JSON.stringify(state.earHistory));}if(typeof data.voiceNotes==='string'){state.voiceNotes=data.voiceNotes.slice(0,1800);localStorage.setItem('musiclab-voice-notes',JSON.stringify(state.voiceNotes));}if(Number.isInteger(data.voiceTarget)&&data.voiceTarget>=48&&data.voiceTarget<=72){state.voiceTarget=data.voiceTarget;localStorage.setItem('musiclab-voice-target',JSON.stringify(state.voiceTarget));}state.stats={total:Math.max(0,Number(data.ear.total)||0),correct:Math.max(0,Number(data.ear.correct)||0)};saveEntries();localStorage.setItem('musiclab-ear',JSON.stringify(state.stats));render();alert('가져오기를 완료했습니다.');
+   state.entries=data.entries;if(data.backing){state.backing=normalizeBacking(data.backing,16);backingPersist();}if(data.studio){try{state.studioProject=normalizeStudioProject(data.studio);state.studioRollPage=0;state.melodyNotes=state.studioProject.melody||[];persistStudio()}catch{}}if(Array.isArray(data.studioProjects)){state.studioProjects=data.studioProjects.slice(0,20).flatMap(x=>{try{return [{...normalizeStudioProject(x),backing:normalizeBacking(x.backing||state.backing,Math.max(1,Array.isArray(x.bars)?x.bars.length:4))}]}catch{return []}});localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects))}if(Array.isArray(data.harmonyHistory)){state.harmonyHistory=data.harmonyHistory.filter(x=>typeof x==='string').slice(-40);localStorage.setItem('musiclab-harmony-questions',JSON.stringify(state.harmonyHistory));}if(Array.isArray(data.problemRecent)){state.problemRecent=data.problemRecent.filter(x=>typeof x==='string').slice(-50);localStorage.setItem('musiclab-problem-recent',JSON.stringify(state.problemRecent));}if(Array.isArray(data.guitarTheory)){state.theoryHistory=data.guitarTheory.slice(-500).filter(x=>typeof x.date==='string'&&typeof x.root==='string'&&['caged','triad','arp','drop'].includes(x.mode));localStorage.setItem('musiclab-guitar-theory-history',JSON.stringify(state.theoryHistory));}if(Array.isArray(data.favoriteGrips)){state.libGripFavorites=data.favoriteGrips.slice(0,60).filter(g=>typeof g.name==='string'&&Array.isArray(g.frets)&&g.frets.length===6&&g.frets.every(f=>f===null||(Number.isInteger(f)&&f>=0&&f<=22)));localStorage.setItem('musiclab-grip-favorites',JSON.stringify(state.libGripFavorites));}if(Array.isArray(data.favoriteChords)){state.libFavorites=data.favoriteChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,100);libraryFavoritesSave();}if(Array.isArray(data.recentChords)){state.libRecent=data.recentChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,12);localStorage.setItem('musiclab-lib-recent',JSON.stringify(state.libRecent));}if(Array.isArray(data.chromatic)){state.chromaticHistory=data.chromatic.slice(-500).filter(x=>typeof x.date==='string'&&CHROMATIC_PATTERNS.includes(x.pattern)&&Number.isFinite(x.bpm));localStorage.setItem('musiclab-chromatic-history',JSON.stringify(state.chromaticHistory));}if(Array.isArray(data.guitarSight)){state.guitarSightHistory=data.guitarSight.slice(-300).filter(x=>Number.isFinite(x.accuracy)&&typeof x.date==='string');localStorage.setItem('musiclab-guitar-sight',JSON.stringify(state.guitarSightHistory));}if(Array.isArray(data.training)){state.earHistory=data.training.slice(-3000).filter(x=>typeof x.date==='string'&&typeof x.kind==='string'&&typeof x.correct==='boolean');localStorage.setItem('musiclab-training-history',JSON.stringify(state.earHistory));}if(typeof data.voiceNotes==='string'){state.voiceNotes=data.voiceNotes.slice(0,1800);localStorage.setItem('musiclab-voice-notes',JSON.stringify(state.voiceNotes));}if(Number.isInteger(data.voiceTarget)&&data.voiceTarget>=48&&data.voiceTarget<=72){state.voiceTarget=data.voiceTarget;localStorage.setItem('musiclab-voice-target',JSON.stringify(state.voiceTarget));}state.stats={total:Math.max(0,Number(data.ear.total)||0),correct:Math.max(0,Number(data.ear.correct)||0)};saveEntries();localStorage.setItem('musiclab-ear',JSON.stringify(state.stats));render();alert('가져오기를 완료했습니다.');
   }catch(err){alert('가져오기에 실패했습니다: '+err.message)}
  }
 });
@@ -761,9 +825,18 @@ document.addEventListener('input',e=>{const t=e.target,k=t.dataset.slider;
  if(k&&['jaw','tongue','lips','vocalF0','vocalBreath'].includes(k)){
  if(['jaw','tongue','lips'].includes(k)){state.vowelPreset='custom';document.querySelectorAll('.voice-preset-row .chip').forEach(b=>b.classList.remove('on'));}state[k]=Number(t.value);const label=$('#v-'+k);if(label)label.textContent=t.value+(k==='vocalF0'?' Hz':'%');const f=$('#formant-values');if(f)f.innerHTML=voiceStats();const g=$('#formant-spectrum');if(g)g.innerHTML=voiceSpectrumSVG();const svg=$('.resonance-graphic');if(svg){const newSvg=document.createElement('div');newSvg.innerHTML=resonanceSvg();svg.replaceWith(newSvg.firstElementChild)}
  }});
+document.addEventListener('input',e=>{
+ const key=e.target.dataset?.backingMix;
+ if(!['drums','bass','piano'].includes(key))return;
+ const n=Math.min(100,Math.max(0,Number(e.target.value)||0));
+ state.backing=normalizeBacking({...state.backing,mix:{...state.backing.mix,[key]:n}},ensureStudio().bars.length);
+ const label=$('#backing-label-'+key);if(label)label.textContent=n+'%';
+ if(backingPlayer)backingPlayer.setMix(state.backing.mix);
+ backingPersist();
+});
 document.addEventListener('submit',e=>{if(e.target.id!=='entry-form')return;e.preventDefault();const f=new FormData(e.target),minutes=Number(f.get('minutes'));if(!Number.isInteger(minutes)||minutes<1||minutes>600)return;
  state.entries.push({id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now()),date:String(f.get('date')),category:String(f.get('category')),minutes,memo:String(f.get('memo')||'').slice(0,1500)});saveEntries();render();});
-window.addEventListener('pagehide',()=>{stopGuitarAudio();if(voiceCompareTimer)clearTimeout(voiceCompareTimer);if(recordingSlot())stopRecording();if(micStop)micStop();if(seqStop)seqStop();if(larynxStop)larynxStop()});
+window.addEventListener('pagehide',()=>{stopGuitarAudio();if(voiceCompareTimer)clearTimeout(voiceCompareTimer);if(recordingSlot())stopRecording();if(micStop)micStop();if(seqStop)seqStop();if(backingPlayer)backingPlayer.stop();if(larynxStop)larynxStop()});
 render();
 setInterval(updatePianoIndicator,900);
 loadPianoSamples().catch(()=>{});

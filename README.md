@@ -1,6 +1,14 @@
-# Music Lab Alpha 0.9.2 — 작곡 스튜디오 및 자동 문제 생성 업데이트
+# Music Lab Alpha 0.9.4
 
-최신 변경사항과 설치 방법: [UPDATE_0.9.2.md](UPDATE_0.9.2.md)
+새 업데이트: 코드 진행을 드럼·베이스·피아노 반주로 연습하는 **Backing Track Lab**. 팝·록·발라드·R&B·재즈 스타일, 악기별 음량, 구간 반복, 카운트인, 기타 코드 진행 연동. 자세한 설명은 `UPDATE_0.9.4.md`를 확인하세요.
+
+# Music Lab Alpha 0.9.3
+
+최신 업데이트: 코드 스튜디오 16마디 멜로디 피아노 롤(4마디씩 이동), 선택 마디 복제, 재생 반복, MIDI 내보내기 및 저장 연동. 자세한 내용은 `UPDATE_0.9.3.md` 참고.
+
+# Music Lab Alpha 0.9.3 — 작곡 스튜디오 및 자동 문제 생성 업데이트
+
+최신 변경사항과 설치 방법: [UPDATE_0.9.3.md](UPDATE_0.9.3.md)
 
 # Music Lab Alpha 0.9.1 — Guitar Fretboard Theory
 

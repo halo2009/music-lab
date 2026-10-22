@@ -28,12 +28,13 @@ export function normalizeStudioProject(data){
   if(segments.reduce((s,x)=>s+x.beats,0)!==4)throw Error(`${b+1}마디의 박자 합계는 4박이어야 합니다.`);
   return {segments};
  });
- const melody=Array.isArray(data.melody)?data.melody.slice(0,256).filter(x=>Number.isInteger(x?.step)&&x.step>=0&&x.step<16&&Number.isInteger(x?.midi)&&x.midi>=48&&x.midi<=83).map(x=>({step:x.step,midi:x.midi})):[];
+ const melody=Array.isArray(data.melody)?data.melody.slice(0,256).filter(x=>Number.isInteger(x?.step)&&x.step>=0&&x.step<bars.length*4&&Number.isInteger(x?.midi)&&x.midi>=48&&x.midi<=83).map(x=>({step:x.step,midi:x.midi})):[];
  return {title:String(data.title||'새 코드 진행').slice(0,70),root,mode,bpm,bars,melody};
 }
 export function cloneProject(data){return normalizeStudioProject(JSON.parse(JSON.stringify(data)));}
 export function addBar(project){const p=cloneProject(project);if(p.bars.length>=STUDIO_MAX_BARS)return p;const last=p.bars.at(-1).segments[0];p.bars.push({segments:[{symbol:last.symbol,beats:4,voicing:last.voicing}]});return p;}
-export function removeBar(project,index){const p=cloneProject(project);if(p.bars.length<=1)return p;p.bars.splice(clamp(index,0,p.bars.length-1),1);return p;}
+export function removeBar(project,index){const p=cloneProject(project);if(p.bars.length<=1)return p;const bar=clamp(index,0,p.bars.length-1);p.bars.splice(bar,1);p.melody=(p.melody||[]).flatMap(x=>x.step>=bar*4&&x.step<(bar+1)*4?[]:[{...x,step:x.step>=((bar+1)*4)?x.step-4:x.step}]);return normalizeStudioProject(p);}
+export function duplicateBar(project,index){const p=cloneProject(project);if(p.bars.length>=STUDIO_MAX_BARS)return p;const bar=clamp(index,0,p.bars.length-1),copy=JSON.parse(JSON.stringify(p.bars[bar]));p.bars.splice(bar+1,0,copy);p.melody=[...(p.melody||[]).map(x=>({...x,step:x.step>=((bar+1)*4)?x.step+4:x.step})),...(p.melody||[]).filter(x=>x.step>=bar*4&&x.step<(bar+1)*4).map(x=>({...x,step:x.step+4}))];return normalizeStudioProject(p);}
 export function splitSlot(project,bar,slot){const p=cloneProject(project),items=p.bars[bar]?.segments,seg=items?.[slot];if(!seg||seg.beats<2||items.length>=4)return p;const first=Math.floor(seg.beats/2),second=seg.beats-first;items.splice(slot,1,{...seg,beats:first},{...seg,beats:second});return p;}
 export function mergeSlot(project,bar,slot){const p=cloneProject(project),items=p.bars[bar]?.segments;if(!items||items.length<=1||!items[slot])return p;const i=slot===0?0:slot-1;items[i].beats+=items[i+1].beats;items.splice(i+1,1);return p;}
 export function setStudioChord(project,bar,slot,symbol){const p=cloneProject(project),parsed=parseChord(symbol);if(!parsed)throw Error('지원되지 않는 코드입니다. 예: F#m7, BbM7, C7(#9), C/E');if(!p.bars[bar]?.segments[slot])throw Error('코드 위치가 올바르지 않습니다.');p.bars[bar].segments[slot].symbol=parsed.name;return p;}

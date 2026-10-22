@@ -25,18 +25,18 @@ export function downloadMidi(bytes,filename='music-lab-progression.mid'){
  const url=URL.createObjectURL(new Blob([bytes],{type:'audio/midi'})),a=document.createElement('a');
  a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-export function pianoRollSVG(chords,melody=[]){
+export function pianoRollSVG(chords,melody=[],startBar=0){
  const low=48,high=84,cellW=32,rowH=10,offX=53,offY=18,contentW=512,contentH=(high-low)*rowH;
  const rows=[];
  for(let m=high-1;m>=low;m--){const j=high-1-m,y=offY+j*rowH;
   rows.push(`<rect x="${offX}" y="${y}" width="${contentW}" height="${rowH}" fill="${[1,3,6,8,10].includes(m%12)?'var(--roll-black)':'var(--roll-white)'}"/><text x="44" y="${y+8}" font-size="9" fill="var(--muted)" text-anchor="end">${m%12===0?'C'+(Math.floor(m/12)-1):''}</text>`);
  }
  let bars='',chordNotes='';for(let b=0;b<4;b++){
-  bars+=`<line x1="${offX+b*4*cellW}" y1="${offY}" x2="${offX+b*4*cellW}" y2="${offY+contentH}" stroke="var(--accent)" stroke-opacity=".55"/><text x="${offX+b*4*cellW+4}" y="11" fill="var(--muted)" font-size="10">BAR ${b+1}</text>`;
+  bars+=`<line x1="${offX+b*4*cellW}" y1="${offY}" x2="${offX+b*4*cellW}" y2="${offY+contentH}" stroke="var(--accent)" stroke-opacity=".55"/><text x="${offX+b*4*cellW+4}" y="11" fill="var(--muted)" font-size="10">BAR ${startBar+b+1}</text>`;
   (chords[b]||[]).forEach(m=>{if(m<low||m>=high)return;let y=offY+(high-1-m)*rowH;
    chordNotes+=`<rect x="${offX+b*4*cellW+1}" y="${y+1}" width="${4*cellW-2}" height="${rowH-2}" rx="3" fill="var(--roll-chord)" opacity=".62"/>`;});
  }
- const placed=melody.map(x=>{const y=offY+(high-1-x.midi)*rowH;return `<rect x="${offX+x.step*cellW+1}" y="${y+1}" width="${cellW-2}" height="${rowH-2}" rx="2" fill="var(--accent-strong)"/>`}).join('');
+ const placed=melody.filter(x=>x.step>=startBar*4&&x.step<(startBar+4)*4&&x.midi>=low&&x.midi<high).map(x=>{const y=offY+(high-1-x.midi)*rowH;return `<rect x="${offX+(x.step-startBar*4)*cellW+1}" y="${y+1}" width="${cellW-2}" height="${rowH-2}" rx="2" fill="var(--accent-strong)"/>`}).join('');
  const grid=Array.from({length:17},(_,i)=>`<line x1="${offX+i*cellW}" y1="${offY}" x2="${offX+i*cellW}" y2="${offY+contentH}" stroke="var(--line)" stroke-width="${i%4===0?1.4:.6}"/>`).join('');
  return `<div class="piano-roll-scroll"><svg class="piano-roll-svg" viewBox="0 0 580 396" role="group" aria-label="피아노 롤: 격자를 눌러 멜로디 입력"><rect x="${offX}" y="${offY}" width="${contentW}" height="${contentH}" fill="var(--card2)"/>${rows.join('')}${bars}${grid}${chordNotes}${placed}<rect x="${offX}" y="${offY}" width="${contentW}" height="${contentH}" fill="transparent" data-action="roll-click"/></svg></div>`;
 }
