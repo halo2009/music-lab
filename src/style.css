@@ -557,3 +557,10 @@ input,select,textarea{touch-action:manipulation}
 /* Keep the existing repeat checkbox compact inside the compose toolbar. */
 .studio092-toolbar .studio093-loop{display:flex;flex-direction:row;align-items:center;gap:9px;min-height:44px}
 .studio092-toolbar .studio093-loop input[type="checkbox"]{min-height:19px;height:19px;width:19px;max-width:none;padding:0;flex:0 0 19px;background:transparent;border:0;accent-color:var(--accent)}
+
+/* Alpha 0.9.5 · compact shared guitar playback controls */
+.guitar-sound-controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin:12px 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card2)}
+.guitar-sound-controls label{display:flex;flex:1 1 160px;min-width:0;flex-direction:column;gap:5px;font-size:12px;font-weight:650}
+.guitar-sound-controls select{width:100%;min-height:42px;font-size:16px}
+.guitar-sound-controls small{flex:1 0 100%;font-size:12px;line-height:1.5;color:var(--muted)}
+@media(max-width:540px){.guitar-sound-controls{gap:10px;padding:10px}.guitar-sound-controls label{flex-basis:calc(50% - 6px);font-size:11px}.guitar-sound-controls select{font-size:16px}}

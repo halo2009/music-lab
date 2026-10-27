@@ -10,7 +10,7 @@ try{
  await import('./src/app.js');
  const click=(action,d={})=>events.get('click')({target:{closest(){return {dataset:{action,...d},disabled:false}}}});
  const change=(id,value,checked)=>events.get('change')({target:{id,value,checked}});
- assert.match(app.innerHTML,/ALPHA 0\.9\.[34]/);
+ assert.match(app.innerHTML,/ALPHA 0\.9\.[345]/);
  click('nav-compose');assert.match(app.innerHTML,/16마디 편집/);
  for(let i=0;i<5;i++)click('studio-add-bar');assert.match(app.innerHTML,/BAR 09/);
  click('studio-roll-next');assert.match(app.innerHTML,/5–8마디/);
@@ -21,7 +21,7 @@ try{
  change('studio-loop',undefined,true);assert.match(app.innerHTML,/id="studio-loop" checked/);
  click('studio-roll-clear-page');assert.match(app.innerHTML,/9–9마디/);
  click('studio-new');assert.match(app.innerHTML,/BAR 04/);
- assert.match(app.innerHTML,/ALPHA 0\.9\.[34]/);
+ assert.match(app.innerHTML,/ALPHA 0\.9\.[345]/);
  click('nav-guitar');assert.match(app.innerHTML,/기타 연습실/);
  click('nav-theory');assert.match(app.innerHTML,/화성학/);
  console.log('PASS 0.9.3 app: 4-bar windows, duplicate/remove, loop state, new project, existing menus');
