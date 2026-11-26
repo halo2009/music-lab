@@ -80,7 +80,7 @@ const request=(pathname,mode='cors')=>{
  return response;
 };
 assert.equal(await request('/music-lab/','navigate'),'./index.html');
-assert.equal(await request('/music-lab/src/app.js?v=beta3-rc3'),'./src/app.js?v=beta3-rc3');
+assert.equal(await request('/music-lab/src/app.js?v=beta3-rc4'),'./src/app.js?v=beta3-rc4');
 assert.equal(request('/other/','navigate'),undefined);
 const html=await readFile(new URL('index.html',base),'utf8');
 for(const [,path] of html.matchAll(/(?:href|src)="(\.\/[^"]+)"/g))assert(assets.includes(path),path);
@@ -92,3 +92,13 @@ const id='TbtHKC1fUEA';
 assert.deepEqual(parseYoutubeBacking('https://youtu.be/'+id+'?t=1m15s'),{id,start:75});
 assert.deepEqual(parseYoutubeBacking('https://www.youtube.com/watch?v='+id+'&t=45'),{id,start:45});
 assert.equal(parseYoutubeBacking('https://www.youtube.com.evil.test/watch?v='+id),null);
+const {searchYoutubeBacking}=await import('./src/youtube-backing.js');
+const matches=await searchYoutubeBacking('Neo Soul','test-key',async address=>{
+ const params=new URL(address).searchParams;
+ assert.equal(params.get('q'),'Neo Soul');
+ assert.equal(params.get('safeSearch'),'strict');
+ assert.equal(params.get('videoEmbeddable'),'true');
+ return {ok:true,json:async()=>({items:[{id:{videoId:id},snippet:{title:'Backing track',channelTitle:'Studio'}}]})};
+});
+assert.deepEqual(matches,[{id,title:'Backing track',channel:'Studio'}]);
+await assert.rejects(searchYoutubeBacking('test','test-key',async()=>({ok:false,status:403})),/할당량/);

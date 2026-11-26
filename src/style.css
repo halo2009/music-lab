@@ -633,3 +633,6 @@ html { touch-action: manipulation; }
   .train-progress-bar > div, .progress-track > div { transition: none; }
 }
 .studio-youtube-frame { display:block; width:100%; min-height:200px; aspect-ratio:16/9; border:0; margin-block:12px; border-radius:10px; }
+.studio-youtube-results { list-style:none; padding:0; display:grid; gap:.5rem; }
+.studio-youtube-results button { width:100%; text-align:left; display:grid; justify-content:start; gap:.25rem; white-space:normal; }
+.studio-youtube-results small { color:var(--muted); }

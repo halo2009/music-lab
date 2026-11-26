@@ -116,3 +116,9 @@
 - 변경 파일: src/app.js, src/youtube-backing.js, src/style.css, index.html, sw.js, test_alpha092_app.mjs, test_beta3.mjs.
 - Node 테스트 20개 통과. URL 허용 범위, 시작 시점 전달, 화면에서 플레이어 열기·닫기, 서비스 워커 모의 로딩을 검사했다.
 - 실제 스트리밍과 iOS 재생은 미검증이다. 네트워크와 영상 소유자의 삽입 허용이 필요하다. 코드 편집처럼 화면 전체가 다시 그려지면 플레이어가 다시 로드될 수 있다.
+
+## Beta 3.0 RC4 — YouTube 검색
+
+- 코드 스튜디오에 YouTube Data API v3 검색, 검색 결과의 영상 제목·채널 및 선택 기능을 추가했다. 기존 링크 입력과 임베드 재생을 유지했다.
+- src/app.js, src/youtube-backing.js, src/style.css, index.html, sw.js, test_beta3.mjs, DEPLOY.md를 수정했다.
+- 모의 API로 검색 요청 옵션, 결과 변환, HTTP 403 처리를 확인했다. 전체 Node 테스트 20개가 통과했다. 실제 API 키를 사용한 검색과 기기 재생은 미검증이다.

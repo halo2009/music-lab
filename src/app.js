@@ -23,9 +23,10 @@ import {buildBackingMidi,renderBackingWav} from './backing-export.js';
 import {gradeRhythm,rhythmExercise} from './rhythm-training.js';
 import {buildPracticePlan} from './practice-plan.js';
 import {importMelodyMidi} from './midi-import.js';
-import {parseYoutubeBacking} from './youtube-backing.js';
-const APP_VERSION='3.0 RC3';
+import {parseYoutubeBacking,searchYoutubeBacking} from './youtube-backing.js';
+const APP_VERSION='3.0 RC4';
 let youtubeBacking=null;
+const youtubeSearch={key:"",query:"",results:[],status:"",pending:false};
 const $=sel=>document.querySelector(sel);
 const safe=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));if(v==null)return d;if(Array.isArray(d))return Array.isArray(v)?v.filter(x=>x!=null):d;if(d!==null&&typeof d==='object')return typeof v==='object'&&!Array.isArray(v)?{...d,...v}:d;return d===null||typeof v===typeof d?v:d}catch{return d}};
@@ -547,6 +548,13 @@ function youtubeBackingPanel(){
  const watch=youtubeBacking?`https://www.youtube.com/watch?v=${youtubeBacking.id}&t=${youtubeBacking.start}s`:'';
  return `<section class="backing-lab" aria-labelledby="youtube-backing-title">
  <h3 id="youtube-backing-title">유튜브 백킹 트랙</h3>
+ <form id="studio-youtube-search" class="backing-options">
+ <label>유튜브 검색<input id="studio-youtube-query" type="search" required maxlength="150" placeholder="예: Neo Soul backing track E" value="${safe(youtubeSearch.query)}"></label>
+ ${youtubeSearch.key?'':`<label>YouTube Data API 키<input id="studio-youtube-key" type="password" required autocomplete="off"></label>`}
+ <button class="btn secondary" type="submit" ${youtubeSearch.pending?'disabled':''}>${youtubeSearch.pending?'검색 중…':'유튜브 검색'}</button>
+ </form>
+ <p role="status">${safe(youtubeSearch.status)}</p>
+ ${youtubeSearch.results.length?`<ul class="studio-youtube-results">${youtubeSearch.results.map((video,index)=>`<li><button type="button" class="btn secondary" data-action="studio-youtube-select" data-index="${index}">${safe(video.title)}<small>${safe(video.channel)}</small></button></li>`).join('')}</ul>`:''}
  <div class="backing-options"><label>유튜브 링크<input id="studio-youtube-url" type="url" value="${safe(watch)}" placeholder="https://youtu.be/…"></label>
  <label>시작 시간(초)<input id="studio-youtube-start" type="number" min="0" step="1" placeholder="링크에 지정된 시간"></label></div>
  ${btn('studio-youtube-load','플레이어 열기','btn secondary')}
@@ -669,6 +677,11 @@ function handleAction(target,e){const a=target.dataset.action;
      const pressed=button.dataset.action.endsWith('mute')?state.backing.muted?.includes(key)??false:state.backing.solo===key;
      button.setAttribute('aria-pressed',String(pressed));
     });return;
+   }
+   if(a==='studio-youtube-select'){
+    const video=youtubeSearch.results[Number(target.dataset.index)];
+    if(video){studioStop();youtubeBacking={id:video.id,start:0};render();$('#youtube-backing-title')?.scrollIntoView();}
+    return;
    }
    if(a==='studio-youtube-load'){
     const video=parseYoutubeBacking($('#studio-youtube-url')?.value);
@@ -1033,6 +1046,20 @@ document.addEventListener('input',e=>{
  const label=$('#backing-label-'+key);if(label)label.textContent=n+'%';
  if(backingPlayer)backingPlayer.setSettings(state.backing);
  backingPersist();
+});
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='studio-youtube-search')return;
+ e.preventDefault();
+ const query=$('#studio-youtube-query')?.value.trim(), key=youtubeSearch.key||$('#studio-youtube-key')?.value.trim();
+ if(!query||!key||youtubeSearch.pending)return;
+ Object.assign(youtubeSearch,{query,pending:true,status:'',results:[]});
+ if(state.tab==='compose')render();
+ try{
+  youtubeSearch.results=await searchYoutubeBacking(query,key);
+  youtubeSearch.key=key;
+  youtubeSearch.status=youtubeSearch.results.length?'원하는 영상을 선택하세요.':'검색 결과가 없어요.';
+ }catch(error){youtubeSearch.key='';youtubeSearch.status=error.message;}
+ finally{youtubeSearch.pending=false;if(state.tab==='compose')render();}
 });
 document.addEventListener('submit',e=>{if(e.target.id!=='entry-form')return;e.preventDefault();const f=new FormData(e.target),minutes=Number(f.get('minutes'));if(!Number.isInteger(minutes)||minutes<1||minutes>600)return;
  state.entries.push({id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now()),date:String(f.get('date')),category:String(f.get('category')),minutes,memo:String(f.get('memo')||'').slice(0,1500)});saveEntries();render();});
