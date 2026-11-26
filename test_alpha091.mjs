@@ -1,3 +1,4 @@
+const originalInterval=globalThis.setInterval;globalThis.setInterval=(...args)=>{const t=originalInterval(...args);t.unref();return t};
 import assert from 'node:assert/strict';
 import {cagedShapes,triadShapes,arpeggioNotes,dropVoicings,TRIAD_STRING_SETS,DROP_STRING_SETS,fretWindowSVG,gripDescription} from './src/guitar-theory.js';
 import {describeChord,validateGrip,gripMidis,chordDiagramSVG,ROOT_CHOICES} from './src/chord-library.js';
@@ -35,7 +36,7 @@ try{
  await import('./src/app.js');
  const action=(id,rest={})=>handlers.get('click')({target:{closest(){return {dataset:{action:id,...rest},disabled:false}}}});
  const change=(id,value)=>handlers.get('change')({target:{id,value}});
- action('nav-guitar');assert.match(app.innerHTML,/ALPHA 0\.9\.[12345]/);assert.match(app.innerHTML,/이 운지 저장/);
+ action('nav-guitar');assert.match(app.innerHTML,/BETA 2/);assert.match(app.innerHTML,/이 운지 저장/);
  action('lib-grip-favorite');assert.equal(JSON.parse(memory.get('musiclab-grip-favorites')).length,1);
  assert.match(app.innerHTML,/저장한 운지/);
  action('lib-grip-load',{index:'0'});assert.match(app.innerHTML,/F#m7/);

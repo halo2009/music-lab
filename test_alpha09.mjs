@@ -1,3 +1,4 @@
+const originalInterval=globalThis.setInterval;globalThis.setInterval=(...args)=>{const t=originalInterval(...args);t.unref();return t};
 import assert from 'node:assert/strict';
 import {startMetronome} from './src/metronome.js';
 import {CHROMATIC_PATTERNS} from './src/chromatic.js';

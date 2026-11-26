@@ -1,3 +1,4 @@
+const originalInterval=globalThis.setInterval;globalThis.setInterval=(...args)=>{const t=originalInterval(...args);t.unref();return t};
 import assert from 'node:assert/strict';
 const memory=new Map(),events=new Map(),app={innerHTML:''},fields=new Map();
 globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
@@ -10,7 +11,7 @@ try{
  await import('./src/app.js');
  const click=(action,d={})=>events.get('click')({target:{closest(){return {dataset:{action,...d},disabled:false}}}});
  const change=(id,value)=>events.get('change')({target:{id,value}});
- assert.match(app.innerHTML,/ALPHA 0\.9\.[2345]/);
+ assert.match(app.innerHTML,/BETA 2/);
  click('nav-compose');assert.match(app.innerHTML,/CHORD STUDIO 2\.0/);assert.match(app.innerHTML,/BAR 04/);
  click('studio-add-bar');assert.match(app.innerHTML,/BAR 05/);
  click('studio-split');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments.length,2);
