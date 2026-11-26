@@ -1,0 +1,13 @@
+import {getAcousticMetrics,pitchSpread,describeAcoustics} from './src/voice-metrics.js';
+import {VOWEL_PRESETS,VOICE_LESSONS,VOICE_QUIZ} from './src/vocal-content.js';
+import assert from 'node:assert/strict';
+assert.equal(VOICE_LESSONS.length,8);
+assert.equal(VOICE_QUIZ.length,6);
+assert.equal(Object.keys(VOWEL_PRESETS).length,5);
+const frame=new Float32Array(4096).map((_,i)=>Math.sin(i*2*Math.PI*180/44100)*.14);
+const spec=new Float32Array(2048).fill(-90); spec[150]=-25;spec[300]=-40;
+const m=getAcousticMetrics(frame,spec,44100);
+assert.ok(m.dbfs <0 && m.dbfs >-50);assert.ok(m.centroid>100&&m.centroid<5000);
+assert.ok(describeAcoustics(m,null).includes('판정'));
+assert.equal(pitchSpread([60,60,60,60,60,60,60,60]).cents,0);
+console.log('PASS: 8 lessons, 6 quiz items, 5 vowel presets, audio feature math and safe feedback');
