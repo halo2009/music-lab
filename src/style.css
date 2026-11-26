@@ -614,3 +614,22 @@ input,select,textarea{touch-action:manipulation}
 @media(max-width:375px){.q96-settings{grid-template-columns:1fr}.q96-option{flex-direction:column;align-items:flex-start;gap:9px}.q96-footer>.btn{width:100%}.q96-mode small{display:none}.q96-mode{min-height:49px;justify-content:center}}
 
 button,a{touch-action:manipulation}.beta-progress{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.beta-progress>div{display:grid;gap:7px;min-width:0}.beta-progress span{font-size:12px;color:var(--muted)}.beta-progress progress{width:100%;accent-color:#65cdb7;height:8px}button:focus-visible,a:focus-visible{outline:2px solid #65cdb7;outline-offset:3px}
+
+/* Keep dense practice controls usable on a touch screen. */
+html { touch-action: manipulation; }
+.backing-mixer { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+.backing-mixer label > span:last-child { display: flex; flex-wrap: wrap; gap: .35rem; }
+.backing-mixer button[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+.backing-options input, .backing-options select { max-width: 100%; }
+.studio092-melody-actions label { min-width: 0; }
+.studio092-melody-actions input { max-width: 100%; }
+@media (max-width: 640px) {
+  .backing-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .backing-mixer button, [data-action="ear-tap"] { min-height: 44px; }
+  .studio092-toolbar { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+  .train-progress-bar > div, .progress-track > div { transition: none; }
+}
+.studio-youtube-frame { display:block; width:100%; min-height:200px; aspect-ratio:16/9; border:0; margin-block:12px; border-radius:10px; }

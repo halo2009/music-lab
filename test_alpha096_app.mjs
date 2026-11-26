@@ -15,8 +15,8 @@ const action=(id,rest={})=>handlers.get('click')({target:{closest(){return {data
 const change=(id,value)=>handlers.get('change')({target:{id,value}});
 function firstOption(){const x=/data-action="quiz-answer" data-answer="([^"]*)"/.exec(app.innerHTML);assert.ok(x);return x[1].replaceAll('&amp;','&').replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&quot;','"').replaceAll('&#39;',"'")}
 try{
- action('nav-quiz');assert.match(app.innerHTML,/BETA 2/);assert.match(app.innerHTML,/문제 연구실/);assert.match(app.innerHTML,/화성학/);assert.match(app.innerHTML,/기타 악보/);
- action('quiz-category',{category:'rhythm'});change('q96-level','2');change('q96-count','5');action('quiz-start');assert.match(app.innerHTML,/문제 1/);assert.match(app.innerHTML,/4분음표=1박/);
+ action('nav-quiz');assert.match(app.innerHTML,/BETA 3.0 RC/);assert.match(app.innerHTML,/문제 연구실/);assert.match(app.innerHTML,/화성학/);assert.match(app.innerHTML,/기타 악보/);
+ action('quiz-category',{category:'rhythm'});change('q96-level','5');change('q96-count','5');action('quiz-start');assert.match(app.innerHTML,/문제 1/);assert.match(app.innerHTML,/5단계/);assert.match(app.innerHTML,/6\/8박자/);
  for(let i=0;i<5;i++){
   action('quiz-answer',{answer:firstOption()});
   assert.match(app.innerHTML,/정답을 확인해 보세요|정답이에요/);
@@ -30,7 +30,7 @@ try{
   if(i<4){assert.doesNotMatch(app.innerHTML,/정답을 확인해 보세요/);action('quiz-next');}
  }
  assert.match(app.innerHTML,/SESSION COMPLETE/);assert.equal(JSON.parse(memory.get('musiclab-quiz096-history')).length,10);
- action('quiz-reset');action('quiz-mode',{mode:'review'});action('quiz-start');assert.match(app.innerHTML,/오답 분야 복습/);
+ action('quiz-reset');action('quiz-mode',{mode:'review'});action('quiz-start');assert.match(app.innerHTML,/취약 개념 복습/);
  action('nav-guitar');assert.match(app.innerHTML,/코드 찾기/);action('guitar-view',{view:'chromatic'});assert.match(app.innerHTML,/60/);
  action('chromatic-preset',{pattern:'1432'});change('chromatic-bpm','95');assert.deepEqual(JSON.parse(memory.get('musiclab-chromatic-settings')),{pattern:'1432',bpm:95});
  action('nav-journal');assert.match(app.innerHTML,/분야별 문제 성취도/);assert.match(app.innerHTML,/리듬/);

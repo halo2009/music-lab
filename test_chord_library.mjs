@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describeChord,parseChord,voicingsFor,validateGrip,gripMidis,CHORD_TYPES,realisticFretboard,chordDiagramSVG} from './src/chord-library.js';
-assert.equal(Object.keys(CHORD_TYPES).length,40);
+assert.equal(Object.keys(CHORD_TYPES).length,42);
 let n=0;
 for(const root of ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'])for(const quality of Object.keys(CHORD_TYPES)){
  const d=describeChord(root,quality);
@@ -26,4 +26,4 @@ assert.equal(parseChord('Cm7b5').quality,'m7b5');
 assert.equal(parseChord('Cblah'),null);
 const board=realisticFretboard({root:'C',show:'scale'});
 assert(board.includes('22</text>')&&board.includes('real-fret-scroll'));
-console.log(`PASS: 40 chord qualities, 480 root/quality combinations, ${n} valid fingerings, spellings, search aliases, physical fretboard.`);
+console.log(`PASS: 42 chord qualities, 504 root/quality combinations, ${n} valid fingerings, spellings, search aliases, physical fretboard.`);

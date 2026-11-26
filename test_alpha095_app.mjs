@@ -15,7 +15,7 @@ await import('./src/app.js');
 const action=(id,rest={})=>handlers.get('click')({target:{closest(){return {dataset:{action:id,...rest},disabled:false}}}});
 const change=(id,value)=>handlers.get('change')({target:{id,value}});
 action('nav-guitar');
-assert.match(app.innerHTML,/BETA 2/);
+assert.match(app.innerHTML,/BETA 3[.]0 RC/);
 assert.match(app.innerHTML,/id="guitar-timbre"/);
 assert.match(app.innerHTML,/id="guitar-pattern"/);
 change('guitar-timbre','acoustic');change('guitar-pattern','arp');

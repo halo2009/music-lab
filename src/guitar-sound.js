@@ -31,7 +31,7 @@ function synthString(ctx,midi,timbre){
  const key=`${ctx.sampleRate}:${timbre}:${midi}`;
  if(cache.has(key))return cache.get(key);
  const rate=ctx.sampleRate,hz=440*2**((midi-69)/12);
- const delay=Math.max(28,Math.round(rate/hz)),seconds=timbre==='acoustic'?2.6:2.45;
+ const delay=Math.max(12,Math.round(rate/hz-.5)),seconds=timbre==='acoustic'?2.6:2.45;
  const length=Math.round(rate*seconds);
  const buffer=ctx.createBuffer(1,length,rate),dst=buffer.getChannelData(0);
  const line=new Float32Array(delay),pick=timbre==='clean'?.18:.29;
@@ -40,7 +40,8 @@ function synthString(ctx,midi,timbre){
  function rand(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return ((seed>>>0)/4294967295)*2-1;}
  for(let i=0;i<delay;i++)line[i]=rand();
  // A pickup/plectrum position suppresses some upper harmonics.
- for(let i=delay-1;i>=0;i--)line[i]=(line[i]-line[(i+delay-notch)%delay])*.5;
+ const excitation=line.slice();
+ for(let i=0;i<delay;i++)line[i]=(excitation[i]-excitation[(i+delay-notch)%delay])*.5;
  let max=1e-6;
  for(let i=0;i<delay;i++)max=Math.max(max,Math.abs(line[i]));
  for(let i=0;i<delay;i++)line[i]/=max;
@@ -58,7 +59,7 @@ function synthString(ctx,midi,timbre){
   dst[i]=Math.max(-1,Math.min(1,x*.8+transient));
  }
  // Integer delay is pitch-corrected at playback by a slight rate adjustment.
- const rateAdjust=hz*delay/rate;
+ const rateAdjust=hz*(delay+.5)/rate;
  const result={buffer,rateAdjust};
  if(cache.size>=MAX_CACHE)cache.delete(cache.keys().next().value);
  cache.set(key,result);return result;

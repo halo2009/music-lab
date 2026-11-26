@@ -20,6 +20,7 @@ export const CHORD_TYPES={
  '6/9':Q('식스 나인','1 3 5 6 9','1 3 6 9','6th'),
  'm6/9':Q('마이너 식스 나인','1 b3 5 6 9','1 b3 6 9','6th'),
  'add9':Q('애드 나인','1 3 5 9','1 3 5 9','Sus / Add'),
+ 'add#11':Q('애드 샵11','1 3 5 #11','1 3 #11','Sus / Add'),
  'madd9':Q('마이너 애드 나인','1 b3 5 9','1 b3 5 9','Sus / Add'),
  'add11':Q('애드 일레븐','1 3 5 11','1 3 5 11','Sus / Add'),
  '7':Q('도미넌트 7','1 3 5 b7','1 3 b7','7th'),
@@ -40,6 +41,7 @@ export const CHORD_TYPES={
  '13':Q('도미넌트 13','1 3 5 b7 9 13','1 3 b7 13','9 / 11 / 13'),
  'maj13':Q('메이저 13','1 3 5 7 9 13','1 3 7 13','9 / 11 / 13'),
  'm13':Q('마이너 13','1 b3 5 b7 9 11 13','1 b3 b7 13','9 / 11 / 13'),
+ 'maj7#11':Q('메이저 7 샵11','1 3 5 7 #11','1 3 7 #11','Altered'),
  '7b5':Q('세븐 플랫5','1 3 b5 b7','1 3 b5 b7','Altered'),
  '7#5':Q('세븐 샵5','1 3 #5 b7','1 3 #5 b7','Altered'),
  '7b9':Q('세븐 플랫9','1 3 5 b7 b9','1 3 b7 b9','Altered'),
@@ -117,7 +119,7 @@ export function standardGrip(chord,rootString='R6',maxFret=18){
   const frets=model.offsets.map(n=>n===null?null:fret+n);
   if(Math.max(...frets.filter(x=>x!==null))>22)continue;
   const grip={frets,base,rootString,rootFret:fret,missing:[],fingers:fret===0?model.fingers.map((v,i)=>frets[i]===0?0:v):[...model.fingers],barre:fret>0?{fret,from:6-base,to:1}:null,verifiedDiagram:true,score:-20+fret*.3};
-  if(validateGrip(grip,d))return grip;
+  if(validateGrip(grip,d)&&grip.frets.every(f=>f===null||f<=maxFret))return grip;
  }
  return null;
 }
@@ -130,7 +132,7 @@ export function voicingsFor(chord,{rootString='all',maxResults=15,maxFret=18}={}
   const bassOpen=OPEN_LOW[base];
   for(let rootFret=0;rootFret<=maxFret;rootFret++){
    if(PC(bassOpen+rootFret)!==bassRoot)continue;
-   const minF=Math.max(0,rootFret-2),upper=Math.min(21,Math.max(4,rootFret+4));
+   const minF=Math.max(0,rootFret-2),upper=Math.min(22,maxFret,Math.max(4,rootFret+4));
    const possibilities=OPEN_LOW.map((open,i)=>{
     if(i<base)return [null];
     if(i===base)return [rootFret];
@@ -146,7 +148,7 @@ export function voicingsFor(chord,{rootString='all',maxResults=15,maxFret=18}={}
      const omitted=d.parts.filter(p=>!pcs.has(p.pc)).map(p=>p.tag);
      const g={frets:[...frets],rootString:'R'+(6-base),rootFret,base,missing:omitted};
      g.score=scoreGrip(g);
-     results.push(g);return;
+     if(validateGrip(g,d))results.push(g);return;
     }
     for(const f of possibilities[i]){frets.push(f);rec(i+1,frets);frets.pop();}
    }
@@ -166,7 +168,21 @@ export function voicingsFor(chord,{rootString='all',maxResults=15,maxFret=18}={}
  return diverse.slice(0,maxResults);
 }
 export function gripMidis(grip){return grip.frets.flatMap((f,i)=>f===null?[]:[OPEN_LOW[i]+f]);}
-export function validateGrip(grip,chord){const d=typeof chord==='string'?parseChord(chord):chord;if(!grip||!d)return false;const s=pitchSet(grip);return [...d.required].every(p=>s.has(p))&&grip.frets.every((f,i)=>f===null||(Number.isInteger(f)&&f>=0&&f<=22))&&gripMidis(grip)[0]%12===pitchClass(d.bass||d.root);}
+export function validateGrip(grip,chord){
+ const d=typeof chord==='string'?parseChord(chord):chord;
+ if(!d||!Array.isArray(grip?.frets)||grip.frets.length!==6)return false;
+ if(!grip.frets.every(f=>f===null||(Number.isInteger(f)&&f>=0&&f<=22)))return false;
+ const notes=gripMidis(grip);
+ const bass=pitchClass(d.bass||d.root);
+ const allowed=new Set([bass,...d.parts.map(part=>part.pc)]);
+ const played=new Set(notes.map(PC));
+ const fretted=grip.frets.filter(f=>f>0);
+ return notes.length>=3&&PC(Math.min(...notes))===bass
+  &&[...played].every(note=>allowed.has(note))
+  &&[...d.required].every(note=>played.has(note))
+  &&(!fretted.length||Math.max(...fretted)-Math.min(...fretted)<=4);
+}
+
 export function chordDiagramSVG(grip,chord){
  if(!grip)return '';
  const x0=48,dx=36,step=36,y0=66;

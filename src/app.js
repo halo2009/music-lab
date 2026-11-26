@@ -15,18 +15,24 @@ import {cagedShapes,triadShapes,arpeggioNotes,dropVoicings,TRIAD_STRING_SETS,DRO
 import {CHROMATIC_PATTERNS} from './chromatic.js';
 import {startMetronome} from './metronome.js';
 import {PROGRESSION_PRESETS,parseProgression,planProgression} from './chord-progression.js';
-import {newStudioProject,normalizeStudioProject,cloneProject,addBar,removeBar,duplicateBar,splitSlot,mergeSlot,setStudioChord,setStudioVoicing,studioEvents,studioVoicing,STUDIO_PRESETS,applyStudioPreset,studioSuggestions,buildStudioMidi} from './studio-engine.js';
+import {newStudioProject,normalizeStudioProject,cloneProject,addBar,removeBar,duplicateBar,splitSlot,mergeSlot,setStudioChord,setStudioVoicing,studioEvents,studioVoicing,STUDIO_PRESETS,applyStudioPreset,studioSuggestions,buildStudioMidi,generateStudioForm,analyzeStudioChord,melodyDuration} from './studio-engine.js';
 import {nextSeed,uniqueGenerated,makeHarmonyProblem,makeEarProblem} from './problem-engine.js';
-import {QUIZ_CATEGORIES,QUIZ_CATEGORY_IDS,GENERATOR_VERSION,makeSession,scoreSession} from './problem-engine-v2.js';
-import {BACKING_STYLES,normalizeBacking,startBackingTrack} from './backing-track.js';
-const APP_VERSION='2';
+import {QUIZ_CATEGORIES,QUIZ_CATEGORY_IDS,makeSession,scoreSession,isCorrectAnswer,weakConcepts} from './problem-engine-v3.js';
+import {BACKING_PARTS,BACKING_STYLES,normalizeBacking,startBackingTrack} from './backing-track.js';
+import {buildBackingMidi,renderBackingWav} from './backing-export.js';
+import {gradeRhythm,rhythmExercise} from './rhythm-training.js';
+import {buildPracticePlan} from './practice-plan.js';
+import {importMelodyMidi} from './midi-import.js';
+import {parseYoutubeBacking} from './youtube-backing.js';
+const APP_VERSION='3.0 RC3';
+let youtubeBacking=null;
 const $=sel=>document.querySelector(sel);
 const safe=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));if(v==null)return d;if(Array.isArray(d))return Array.isArray(v)?v.filter(x=>x!=null):d;if(d!==null&&typeof d==='object')return typeof v==='object'&&!Array.isArray(v)?{...d,...v}:d;return d===null||typeof v===typeof d?v:d}catch{return d}};
 const persisted=read('musiclab-settings',{});
 const chromaticSettings=read('musiclab-chromatic-settings',{});
 const saveChromaticSettings=()=>localStorage.setItem('musiclab-chromatic-settings',JSON.stringify({pattern:state.chromaticPattern,bpm:state.chromaticBpm}));
-const state={quizCategory:'harmony',quizLevel:1,quizCount:10,quizMode:'learn',quizSession:null,quizHistory:read('musiclab-quiz096-history',[]),quizRecent:read('musiclab-quiz096-recent',[]),tab:'home',root:persisted.root||'C',mode:persisted.mode||'major',theme:persisted.theme||'dark',seventh:true,theoryScale:persisted.mode||'major',theoryOctave:4,harmonyLevel:1,harmonyQuestion:null,harmonyAnswer:null,harmonyHistory:read('musiclab-harmony-questions',[]),problemRecent:read('musiclab-problem-recent',[]),guitarAudio:normalizeGuitarSound(read('musiclab-guitar-sound',{})),guitarScale:'major',guitarDisplay:'scale',guitarView:'library',theoryMode:'caged',theoryRoot:'C',theoryMinor:false,theoryTriadSet:'123',theoryArpQuality:'maj7',theoryStartFret:1,theoryDropQuality:'maj7',theoryDropType:2,theoryDropSet:'4321',theorySelected:0,theoryHistory:read('musiclab-guitar-theory-history',[]),libGripFavorites:read('musiclab-grip-favorites',[]),chromaticPattern:CHROMATIC_PATTERNS.includes(chromaticSettings.pattern)?chromaticSettings.pattern:'1234',chromaticBpm:Number.isInteger(chromaticSettings.bpm)?Math.max(60,Math.min(120,chromaticSettings.bpm)):60,chromaticPlaying:false,chromaticHistory:read('musiclab-chromatic-history',[]),proInput:'F#m7 B7 EM7 C#m7',proPlan:null,proSelected:0,proBpm:80,proPlaying:false,proError:'',libRoot:'F#',libQuality:'m7',libBass:'',libString:'all',libSelected:0,libAdvanced:false,libFavorites:read('musiclab-lib-favorites',[]),libRecent:read('musiclab-lib-recent',[]),realFretMax:22,libFretOpen:false,guitarSightKey:'C-major',guitarSightLevel:1,guitarSightBpm:80,guitarSightPos:0,guitarSightExam:false,guitarSight:null,guitarSightIndex:0,guitarSightHits:0,guitarSightMistakes:0,guitarSightRetried:false,guitarSightStatus:'idle',guitarSightShowTab:false,guitarSightLast:'',guitarSightHistory:read('musiclab-guitar-sight',[]),guitarGripRootString:'R6',guitarGripQuality:'all',guitarGrip:chooseChord({root:'C',quality:'m7',rootString:'R6'}),guitarProgression:[],guitarCurrent:0,guitarRhythmBpm:80,guitarRhythmPattern:['D','-','D','U','D','-','D','U','D','-','D','U','D','-','D','U'],guitarRhythmPlaying:-1,selectedChord:0,earMode:'staff',clef:'treble',staffLevel:'chromatic',melodyInputs:[],earSession:{completed:0,correct:0},earHistory:read('musiclab-training-history',[]),question:null,feedback:null,reg:'m1',part:'folds',vocalView:'science',voiceStep:0,vocalLesson:'fold',vowelPreset:'a',voiceQuizIndex:0,voiceQuizChoice:null,voiceQuizScore:0,voiceTarget:read('musiclab-voice-target',60),voiceNotes:read('musiclab-voice-notes',''),larynxFocus:'all',larynxYaw:20,larynxPitch:43,larynxZoom:100,larynxAnimating:false,glottalOpen:30,jaw:55,tongue:50,lips:30,vocalF0:180,vocalBreath:24,compDegrees:[0,5,3,4],studioProject:read('musiclab-studio-active',null),studioProjects:read('musiclab-studio-projects',[]),studioSelected:[0,0],studioRollPage:0,studioLoop:false,studioError:'',backing:read('musiclab-backing',null),backingPlaying:false,backingBar:null,melodyNotes:read('musiclab-melody',[]),bpm:82,playing:-1,entries:read('musiclab-entries',[]),stats:read('musiclab-ear',{total:0,correct:0}),micActive:false,micError:''};
+const state={practiceMinutes:read('musiclab-practice-minutes',20),rhythmLevel:1,rhythmTaps:[],quizCategory:'harmony',quizLevel:1,quizCount:10,quizMode:'learn',quizSession:null,quizHistory:read('musiclab-quiz096-history',[]),quizRecent:read('musiclab-quiz096-recent',[]),tab:'home',root:persisted.root||'C',mode:persisted.mode||'major',theme:persisted.theme||'dark',seventh:true,theoryScale:persisted.mode||'major',theoryOctave:4,harmonyLevel:1,harmonyQuestion:null,harmonyAnswer:null,harmonyHistory:read('musiclab-harmony-questions',[]),problemRecent:read('musiclab-problem-recent',[]),guitarAudio:normalizeGuitarSound(read('musiclab-guitar-sound',{})),guitarScale:'major',guitarDisplay:'scale',guitarView:'library',theoryMode:'caged',theoryRoot:'C',theoryMinor:false,theoryTriadSet:'123',theoryArpQuality:'maj7',theoryStartFret:1,theoryDropQuality:'maj7',theoryDropType:2,theoryDropSet:'4321',theorySelected:0,theoryHistory:read('musiclab-guitar-theory-history',[]),libGripFavorites:read('musiclab-grip-favorites',[]),chromaticPattern:CHROMATIC_PATTERNS.includes(chromaticSettings.pattern)?chromaticSettings.pattern:'1234',chromaticBpm:Number.isInteger(chromaticSettings.bpm)?Math.max(60,Math.min(120,chromaticSettings.bpm)):60,chromaticPlaying:false,chromaticHistory:read('musiclab-chromatic-history',[]),proInput:'F#m7 B7 EM7 C#m7',proPlan:null,proSelected:0,proBpm:80,proPlaying:false,proError:'',libRoot:'F#',libQuality:'m7',libBass:'',libString:'all',libSelected:0,libAdvanced:false,libFavorites:read('musiclab-lib-favorites',[]),libRecent:read('musiclab-lib-recent',[]),realFretMax:22,libFretOpen:false,guitarSightKey:'C-major',guitarSightLevel:1,guitarSightBpm:80,guitarSightPos:0,guitarSightExam:false,guitarSight:null,guitarSightIndex:0,guitarSightHits:0,guitarSightMistakes:0,guitarSightRetried:false,guitarSightStatus:'idle',guitarSightShowTab:false,guitarSightLast:'',guitarSightHistory:read('musiclab-guitar-sight',[]),guitarGripRootString:'R6',guitarGripQuality:'all',guitarGrip:chooseChord({root:'C',quality:'m7',rootString:'R6'}),guitarProgression:[],guitarCurrent:0,guitarRhythmBpm:80,guitarRhythmPattern:['D','-','D','U','D','-','D','U','D','-','D','U','D','-','D','U'],guitarRhythmPlaying:-1,selectedChord:0,earMode:'staff',clef:'treble',staffLevel:'chromatic',melodyInputs:[],earSession:{completed:0,correct:0},earHistory:read('musiclab-training-history',[]),question:null,feedback:null,reg:'m1',part:'folds',vocalView:'science',voiceStep:0,vocalLesson:'fold',vowelPreset:'a',voiceQuizIndex:0,voiceQuizChoice:null,voiceQuizScore:0,voiceTarget:read('musiclab-voice-target',60),voiceNotes:read('musiclab-voice-notes',''),larynxFocus:'all',larynxYaw:20,larynxPitch:43,larynxZoom:100,larynxAnimating:false,glottalOpen:30,jaw:55,tongue:50,lips:30,vocalF0:180,vocalBreath:24,compDegrees:[0,5,3,4],studioProject:read('musiclab-studio-active',null),studioProjects:read('musiclab-studio-projects',[]),studioSelected:[0,0],studioRollPage:0,studioLoop:false,studioError:'',backing:read('musiclab-backing',null),backingPlaying:false,backingBar:null,melodyNotes:read('musiclab-melody',[]),bpm:82,playing:-1,entries:read('musiclab-entries',[]),stats:read('musiclab-ear',{total:0,correct:0}),micActive:false,micError:''};
 const saveSettings=()=>localStorage.setItem('musiclab-settings',JSON.stringify({root:state.root,mode:state.mode,theme:state.theme}));
 const saveEntries=()=>localStorage.setItem('musiclab-entries',JSON.stringify(state.entries));
 let micStop=null,seqStop=null,larynxStop=null,voiceCompareTimer=null,guitarAudioTimers=[],guitarRhythmTimer=null,chromaticMetronomeStop=null,backingPlayer=null;
@@ -94,7 +100,7 @@ function guitarSoundControls(){return `<div class="guitar-sound-controls" role="
 function playSelectedGuitarChord(midis,duration=1.7){stopGuitarSound();return guitarChord(midis,{...state.guitarAudio,duration});}
 function playSelectedGuitarNote(midi){return guitarNote(midi,{timbre:state.guitarAudio.timbre,duration:1.1});}
 function guitarTop(){return `<div class="guitar-nav" role="group" aria-label="기타 훈련 메뉴">${[['library','코드 사전'],['theory','지판 학습'],['chromatic','크로매틱'],['progression','코드 진행'],['sight','기타 초견'],['chords','랜덤 코드'],['fretboard','실제 지판'],['rhythm','리듬']].map(([id,label])=>`<button class="guitar-nav-tab ${state.guitarView===id?'on':''}" data-action="guitar-view" data-view="${id}">${label}</button>`).join('')}</div>`;}
-function guitarPage(){return `${pageHeader('GUITAR STUDIO / BETA ${APP_VERSION}','기타 연습실','악보를 보고 프렛을 찾고, 코드폼과 리듬까지 연습하세요. 6현 표준 튜닝(E–A–D–G–B–e) 기준입니다.')}${guitarTop()}${state.guitarView==='library'?guitarLibrary():state.guitarView==='theory'?guitarTheory():state.guitarView==='chromatic'?guitarChromatic():state.guitarView==='progression'?guitarProgressionPro():state.guitarView==='sight'?guitarSight():state.guitarView==='chords'?guitarChords():state.guitarView==='rhythm'?guitarRhythm():guitarReal()}`;}
+function guitarPage(){return `${pageHeader('GUITAR STUDIO / BETA '+APP_VERSION,'기타 연습실','악보를 보고 프렛을 찾고, 코드폼과 리듬까지 연습하세요. 6현 표준 튜닝(E–A–D–G–B–e) 기준입니다.')}${guitarTop()}${state.guitarView==='library'?guitarLibrary():state.guitarView==='theory'?guitarTheory():state.guitarView==='chromatic'?guitarChromatic():state.guitarView==='progression'?guitarProgressionPro():state.guitarView==='sight'?guitarSight():state.guitarView==='chords'?guitarChords():state.guitarView==='rhythm'?guitarRhythm():guitarReal()}`;}
 function selectedLibraryChord(){return describeChord(state.libRoot,state.libQuality,state.libBass)}
 function libraryFavoritesSave(){localStorage.setItem('musiclab-lib-favorites',JSON.stringify(state.libFavorites))}
 function libraryRecentTrack(name){state.libRecent=[name,...state.libRecent.filter(v=>v!==name)].slice(0,12);localStorage.setItem('musiclab-lib-recent',JSON.stringify(state.libRecent))}
@@ -109,7 +115,7 @@ function guitarLibrary(){
  const options=QUALITY_GROUPS.map(cat=>`<optgroup label="${cat}">${Object.entries(CHORD_TYPES).filter(([id,q])=>q.category===cat).map(([id,q])=>`<option value="${id}" ${state.libQuality===id?'selected':''}>${id||'M'} · ${q.label}</option>`).join('')}</optgroup>`).join('');
  const intervalRoles=d.parts.map(x=>`<span class="lib-interval"><b>${safe(x.tag)}</b>${safe(x.name)}</span>`).join('');
  const frets=selected?selected.frets.map((f,i)=>`<span>${6-i}번 줄 <b>${f===null?'× 뮤트':f===0?'○ 개방':f+'프렛'}</b></span>`).join(''):'';
- return `<section class="panel lib09-search"><div class="lib09-intro"><div><span class="mini-label">GUITAR CHORD LIBRARY · ALPHA 0.9</span><h2>코드 찾기</h2><p>코드만 입력하면 바로 큰 운지도를 볼 수 있어요.</p></div><span class="pill">40종 코드</span></div>
+ return `<section class="panel lib09-search"><div class="lib09-intro"><div><span class="mini-label">GUITAR CHORD LIBRARY · ALPHA 0.9</span><h2>코드 찾기</h2><p>코드만 입력하면 바로 큰 운지도를 볼 수 있어요.</p></div><span class="pill">${Object.keys(CHORD_TYPES).length}종 코드</span></div>
  <div class="lib-search"><label for="chord-search">① 코드 이름 입력</label><div class="lib-search-row"><input id="chord-search" type="text" spellcheck="false" autocomplete="off" placeholder="예: F#m7, BbM7, C/E" aria-describedby="lib-help"><button class="btn primary" data-action="lib-search">찾기</button></div><small id="lib-help">M7 / maj7 / △7, m7♭5 / ø, sus, 텐션, 슬래시 코드 지원</small></div>
  <div class="lib09-easy"><div class="lib09-mini-title">빠른 코드 선택</div><div class="lib09-key-row" role="group" aria-label="코드 루트 선택">${ROOT_CHOICES.map(r=>`<button class="lib-root-chip ${state.libRoot===r?'active':''}" data-action="lib-root-quick" data-root="${r}" aria-pressed="${state.libRoot===r}">${r}</button>`).join('')}</div><div class="lib09-quality-row" role="group" aria-label="자주 쓰는 코드 종류">${popular.map(([k,n])=>`<button class="lib09-quality ${state.libQuality===k?'active':''}" data-action="lib-quality-quick" data-quality="${k}" aria-pressed="${state.libQuality===k}">${n}</button>`).join('')}</div></div>
  <div class="lib09-filter"><label>코드 전체 목록<select id="lib-quality">${options}</select></label><label>루트 현 선택<select id="lib-string">${[['all','모든 루트 현'],['R6','R6 · 6번 줄'],['R5','R5 · 5번 줄'],['R4','R4 · 4번 줄']].map(([id,l])=>`<option value="${id}" ${state.libString===id?'selected':''}>${l}</option>`).join('')}</select></label></div>
@@ -264,9 +270,9 @@ function guitarSightAnswer(midi){const ex=state.guitarSight;if(!ex||state.guitar
 }
 
 function newQuestion(){
- state.feedback=null;state.melodyInputs=[];
+ state.feedback=null;state.melodyInputs=[];state.rhythmTaps=[];
  const kind=state.earMode;
- const r=uniqueGenerated(()=>makeEarProblem({mode:kind,clef:state.clef,level:state.staffLevel,seed:nextSeed()}),x=>x.signature,state.problemRecent);
+ const r=uniqueGenerated(()=>kind==='tap-rhythm'?rhythmExercise(state.rhythmLevel,nextSeed()):makeEarProblem({mode:kind,clef:state.clef,level:state.staffLevel,seed:nextSeed()}),x=>x.signature,state.problemRecent);
  state.question=r.item;state.problemRecent=[...state.problemRecent,r.signature].slice(-50);
  localStorage.setItem('musiclab-problem-recent',JSON.stringify(state.problemRecent));
 }
@@ -289,7 +295,14 @@ function storeTraining(isCorrect,kind){
 }
 function playQuestion(){
  const q=state.question;if(!q)return;
- if(q.kind==='staff')note(q.notes[0],undefined,.95);
+ stopAllScheduled();
+ if(q.kind==='tap-rhythm'){
+  const start=context().currentTime+.08;
+  q.beats.forEach(beat=>note(79,start+beat*60/q.bpm,.065,{volume:.13}));
+ }else if(q.kind==='progression'){
+  const start=context().currentTime+.08;
+  q.groups.forEach((group,i)=>chord(group,start+i*.83,.66));
+ }else if(q.kind==='staff')note(q.notes[0],undefined,.95);
  else if(q.kind==='read')note(q.notes[0],undefined,.48);
  else if(q.kind==='melody')arpeggio(q.notes,.56);
  else if(q.kind==='quality')chord(q.midis);
@@ -307,8 +320,13 @@ function trainingStats(){
 }
 function earLab(){
  const q=state.question,solved=!!state.feedback,session=state.earSession;
- const modes=[['staff','소리 → 건반'],['read','악보 → 건반'],['melody','3음 선율'],['direction','높낮이'],['interval','음정'],['quality','장·단화음']];
+ const modes=[['staff','소리 → 건반'],['read','악보 → 건반'],['melody','3음 선율'],['direction','높낮이'],['interval','음정'],['quality','장·단화음'],['progression','코드 진행'],['tap-rhythm','리듬 따라 치기']];
  const training=['staff','read','melody'].includes(state.earMode);
+ const recentMisses=state.earHistory.slice(-100).reduce((counts,item)=>{
+  if(!item.correct&&modes.some(([mode])=>mode===item.kind))counts[item.kind]=(counts[item.kind]??0)+1;
+  return counts;
+ },{});
+ const weakMode=Object.entries(recentMisses).sort((a,b)=>b[1]-a[1])[0]?.[0];
  const midis=q?.notes||[];
  const displayed=q&&(solved||state.earMode==='read')?midis:[];
  const allCorrect=solved&&state.feedback?.isCorrect;
@@ -320,7 +338,16 @@ function earLab(){
  const instructions=state.earMode==='staff'?'문제 음을 듣고 같은 높이의 건반을 터치하세요.':state.earMode==='read'?'오선지의 음표를 읽고 건반을 선택하세요.':'3개의 음을 듣고 순서대로 건반을 선택하세요.';
  return `${pageHeader('GOLDEN EAR INSPIRED / ORIGINAL TRAINER','청각·악보 훈련','악보 읽기와 청음, 피아노 건반을 함께 익히는 실전 훈련입니다.')}
  <div class="mode-tabs">${modes.map(([k,l])=>`<button class="mode-tab ${state.earMode===k?'selected':''}" data-action="ear-mode" data-mode="${k}">${l}</button>`).join('')}</div>
- ${training?`<div class="train-layout"><section class="panel train-primary"><div class="train-progress"><span>문제 ${Math.min(10,session.completed+(solved?0:1))} / 10</span><strong>${session.correct}개 정답</strong></div><div class="train-progress-bar"><div style="width:${session.completed*10}%"></div></div>
+ ${weakMode?btn('ear-review','오답 복습 · '+modes.find(([mode])=>mode===weakMode)[1],'btn secondary',`data-mode="${weakMode}"`):''}
+ ${state.earMode==='tap-rhythm'?`<div class="two-col top-align"><section class="panel">
+ <label>난이도 <select id="rhythm-level"><option value="1" ${state.rhythmLevel===1?'selected':''}>1 · 정박</option><option value="2" ${state.rhythmLevel===2?'selected':''}>2 · 싱코페이션</option><option value="3" ${state.rhythmLevel===3?'selected':''}>3 · 6/8박자</option></select></label>
+ <h3>${q?safe(q.prompt):'리듬 따라 치기'}</h3>
+ ${q?`<p>${q.meter} · ${q.bpm} ${q.meter==='6/8'?'4분음표/분':'BPM'} · 탭 <span id="rhythm-tap-count">${state.rhythmTaps.length}</span>/${q.beats.length}</p>`:''}
+ ${btn('ear-tap','여기를 터치','btn primary',q&&!solved?'':'disabled')}
+ ${btn('ear-play','다시 듣기','btn secondary',q?'':'disabled')}
+ ${btn('ear-new','새 리듬','btn secondary')}
+ ${solved?`<p role="status">${state.feedback.isCorrect?'정확해요.':'간격을 다시 맞춰 보세요.'} 최대 오차 ${state.feedback.error}ms</p>`:''}
+ </section>${trainingStats()}</div>`:training?`<div class="train-layout"><section class="panel train-primary"><div class="train-progress"><span>문제 ${Math.min(10,session.completed+(solved?0:1))} / 10</span><strong>${session.correct}개 정답</strong></div><div class="train-progress-bar"><div style="width:${session.completed*10}%"></div></div>
  <div class="train-selector"><label>음자리표<select id="staff-clef"><option value="treble" ${!bass?'selected':''}>높은음자리표</option><option value="bass" ${bass?'selected':''}>낮은음자리표</option></select></label><label>음계 범위<select id="staff-level"><option value="diatonic" ${state.staffLevel==='diatonic'?'selected':''}>흰 건반 7음계</option><option value="chromatic" ${state.staffLevel==='chromatic'?'selected':''}>반음 포함 12음계</option></select></label></div>
  <div class="clef-selector"><div class="clef-info"><img src="./assets/${bass?'bass':'treble'}-clef.svg" alt="${bass?'낮은음자리표':'높은음자리표'}"/><div><strong>${bass?'낮은음자리표':'높은음자리표'}</strong><span>${state.earMode==='melody'?'선율 따라 하기':state.earMode==='read'?'악보 읽기':'음 듣고 찾기'}</span></div></div><span class="pill">${state.staffLevel==='chromatic'?'12음계':'7음계'}</span></div>
  ${staffSVG({clef:state.clef,notes:displayed,ghost:state.earMode!=='read',showLabels:solved})}
@@ -348,8 +375,7 @@ function oldEar(){const q=state.question,pct=state.stats.total?Math.round(state.
 // Unified quiz screen: visual changes will be reviewed one page at a time.
 const QUIZ_MODES=[['learn','학습','한 문제마다 정답·해설'],['exam','실전','세트가 끝나면 결과 확인'],['review','오답 복습','이전에 틀린 분야 재출제']];
 function startQuiz(){
- const mistakes=state.quizHistory.filter(x=>x.correct===false).slice(-160);
- const weak=[...new Set(mistakes.map(x=>x.category))].filter(x=>QUIZ_CATEGORY_IDS.includes(x));
+ const weak=weakConcepts(state.quizHistory);
  if(state.quizMode==='review'&&!weak.length)return;
  const session=makeSession({category:state.quizCategory,level:state.quizLevel,count:state.quizCount,mode:state.quizMode,recent:state.quizRecent,weak});
  state.quizSession=session;
@@ -367,8 +393,8 @@ function answerQuiz(pick){
  const session=state.quizSession;
  if(!session||session.status!=='active'||session.answers.length>session.index)return;
  const q=session.questions[session.index];if(!q.options.includes(pick))return;
- const correct=pick===q.answer;
- session.answers.push({category:q.category,kind:q.kind,seed:q.seed,version:q.version,signature:q.signature,correct,chosen:pick,date:new Date().toISOString()});
+ const correct=isCorrectAnswer(q,pick);
+ session.answers.push({category:q.category,kind:q.kind,seed:q.seed,level:q.level,preferred:q.preferred,version:q.version,signature:q.signature,correct,chosen:pick,date:new Date().toISOString()});
  if(session.mode==='exam'&&session.answers.length===session.questions.length)session.status='complete';
  if(session.status==='complete'){
   state.quizHistory=[...state.quizHistory,...session.answers].slice(-800);
@@ -378,26 +404,26 @@ function answerQuiz(pick){
 }
 function nextQuiz(){const s=state.quizSession;if(!s||s.status!=='active'||s.answers.length<=s.index)return;if(s.index+1===s.questions.length){s.status='complete';state.quizHistory=[...state.quizHistory,...s.answers].slice(-800);localStorage.setItem('musiclab-quiz096-history',JSON.stringify(state.quizHistory));}else s.index+=1;render();}
 function quiz(){
- const s=state.quizSession,misses=state.quizHistory.filter(x=>x.correct===false).length;
+ const s=state.quizSession,misses=weakConcepts(state.quizHistory).reduce((sum,item)=>sum+item.misses,0);
  const byCategory=id=>QUIZ_CATEGORIES.find(c=>c.id===id)?.label||id;
  const total=state.quizHistory.length,correctTotal=state.quizHistory.filter(x=>x.correct).length;
- const header=pageHeader('PROBLEM ENGINE / BETA 2','문제 연구실','문제 파일을 쌓지 않고 음악 이론으로 실시간 출제합니다. 한 화면에서 문제를 풀고 기록까지 확인하세요.');
+ const header=pageHeader('PROBLEM ENGINE / BETA '+APP_VERSION,'문제 연구실','문제 파일을 쌓지 않고 음악 이론으로 실시간 출제합니다. 한 화면에서 문제를 풀고 기록까지 확인하세요.');
  if(!s){
   return header+`<section class="panel q96-setup"><div class="q96-eyebrow">01 / 분야 선택</div><h2>무엇을 연습할까요?</h2><div class="q96-categories">${QUIZ_CATEGORIES.map(x=>`<button type="button" data-action="quiz-category" data-category="${x.id}" aria-pressed="${state.quizCategory===x.id}" class="q96-category ${state.quizCategory===x.id?'is-on':''}"><strong>${safe(x.label)}</strong><span>${safe(x.description)}</span></button>`).join('')}</div><div class="q96-eyebrow q96-spaced">02 / 출제 설정</div>
-  <div class="q96-settings"><label>난이도<select id="q96-level">${[1,2,3].map(n=>`<option value="${n}" ${n===state.quizLevel?'selected':''}>${n}단계 · ${['기초','응용','심화'][n-1]}</option>`).join('')}</select></label><label>문제 수<select id="q96-count">${[5,10,20].map(n=>`<option value="${n}" ${n===state.quizCount?'selected':''}>${n}문제</option>`).join('')}</select></label></div>
+  <div class="q96-settings"><label>난이도<select id="q96-level">${[1,2,3,4,5].map(n=>`<option value="${n}" ${n===state.quizLevel?'selected':''}>${n}단계 · ${['기초','기본','응용','심화','고급'][n-1]}</option>`).join('')}</select></label><label>문제 수<select id="q96-count">${[5,10,20].map(n=>`<option value="${n}" ${n===state.quizCount?'selected':''}>${n}문제</option>`).join('')}</select></label></div>
   <div class="q96-mode-title">풀이 방식</div><div class="q96-modes">${QUIZ_MODES.map(([k,title,desc])=>`<button type="button" class="q96-mode ${state.quizMode===k?'is-on':''}" aria-pressed="${state.quizMode===k}" data-action="quiz-mode" data-mode="${k}" ${k==='review'&&!misses?'disabled title="오답 기록이 생긴 후 사용할 수 있어요"':''}><b>${title}</b><small>${desc}</small></button>`).join('')}</div>
-  <button class="btn primary q96-start" data-action="quiz-start">${icon('play',18)} 문제 풀기 시작</button><p class="q96-caption">${state.quizMode==='review'?'기록된 오답 분야에서 새 문제를 생성합니다.':'실전 모드에서는 마지막 문제까지 정답을 공개하지 않습니다.'}</p></section>
+  <button class="btn primary q96-start" data-action="quiz-start">${icon('play',18)} 문제 풀기 시작</button><p class="q96-caption">${state.quizMode==='review'?'최근 풀이에서 오답이 남은 개념을 중심으로 출제합니다.':'실전 모드에서는 마지막 문제까지 정답을 공개하지 않습니다.'}</p></section>
   <section class="q96-overview"><div class="panel"><small>누적 풀이</small><strong>${total}<span>문제</span></strong></div><div class="panel"><small>누적 정답률</small><strong>${total?Math.round(correctTotal/total*100)+'%':'—'}</strong></div><div class="panel"><small>복습할 오답 기록</small><strong>${misses}<span>개</span></strong></div></section>
   ${infoBox('같은 시드와 생성 엔진 버전으로 문제를 재현할 수 있어요. 피아노 샘플을 재사용하며 새로운 문제 이미지·오디오 파일은 만들지 않습니다.')}`;
  }
  const index=s.index,q=s.questions[index],response=s.answers[index],complete=s.status==='complete';
- if(complete){const r=scoreSession(s);return header+`<section class="panel q96-finish"><div class="q96-eyebrow">SESSION COMPLETE</div><div class="q96-score">${r.percentage}<small>/ 100</small></div><h2>${r.correct} / ${r.total}문제 정답</h2><p>이번 세트의 결과가 이 기기에 저장됐어요.</p><div class="q96-review-list">${s.questions.map((item,i)=>`<details><summary><span>${i+1}. ${safe(byCategory(item.category))} · ${safe(s.answers[i].correct?'정답':'오답')}</span><strong>${s.answers[i].correct?'✓':'–'}</strong></summary><p>${safe(item.prompt)}</p><p>선택: ${safe(s.answers[i].chosen)}</p><p>정답: ${safe(item.answer)}</p><p>${safe(item.explanation)}</p></details>`).join('')}</div><div class="q96-footer"><button class="btn secondary" data-action="quiz-reset">설정으로 돌아가기</button><button class="btn primary" data-action="quiz-retry">새 문제 다시 풀기</button></div></section>`;}
+ if(complete){const r=scoreSession(s);return header+`<section class="panel q96-finish"><div class="q96-eyebrow">SESSION COMPLETE</div><div class="q96-score">${r.percentage}<small>/ 100</small></div><h2>${r.correct} / ${r.total}문제 정답</h2><p>이번 세트의 결과가 이 기기에 저장됐어요.</p><div class="q96-review-list">${s.questions.map((item,i)=>`<details><summary><span>${i+1}. ${safe(byCategory(item.category))} · ${safe(s.answers[i].correct?'정답':'오답')}</span><strong>${s.answers[i].correct?'✓':'–'}</strong></summary><p>${safe(item.prompt)}</p><p>선택: ${safe(s.answers[i].chosen)}</p><p>정답: ${safe((item.answers??[item.answer]).join(" / "))}</p><p>${safe(item.explanation)}</p></details>`).join('')}</div><div class="q96-footer"><button class="btn secondary" data-action="quiz-reset">설정으로 돌아가기</button><button class="btn primary" data-action="quiz-retry">새 문제 다시 풀기</button></div></section>`;}
  const answerShown=!!response&&s.mode!=='exam';const progress=Math.round(100*(index+1)/s.questions.length);
- return header+`<section class="panel q96-play"><div class="q96-play-meta"><span>${safe(byCategory(q.category))} · ${s.level}단계</span><button type="button" data-action="quiz-reset">설정 변경</button></div><div class="q96-progressline"><b>문제 ${index+1} <small>/ ${s.questions.length}</small></b><span>${s.mode==='exam'?'실전 · 마지막에 채점':s.mode==='review'?'오답 분야 복습':'학습 · 즉시 해설'}</span></div><div class="q96-track"><span style="width:${progress}%"></span></div>
+ return header+`<section class="panel q96-play"><div class="q96-play-meta"><span>${safe(byCategory(q.category))} · ${q.level}단계</span><button type="button" data-action="quiz-reset">설정 변경</button></div><div class="q96-progressline"><b>문제 ${index+1} <small>/ ${s.questions.length}</small></b><span>${s.mode==='exam'?'실전 · 마지막에 채점':s.mode==='review'?'취약 개념 복습':'학습 · 즉시 해설'}</span></div><div class="q96-track"><span style="width:${progress}%"></span></div>
  <div class="q96-question-label">QUESTION ${String(index+1).padStart(2,'0')}</div><h2 class="q96-question">${safe(q.prompt)}</h2>
  ${q.staffMidi?`<div class="q96-score-wrap">${staffSVG({clef:'treble',notes:[q.staffMidi]})}<p>기타는 실제 소리보다 한 옥타브 높게 기보합니다.</p></div>`:''}
  ${q.playback?`<button class="q96-listen" type="button" data-action="quiz-listen">${icon('play',21)} <span>문제 소리 듣기</span></button>`:''}
- <div class="q96-options" role="group" aria-label="정답 선택">${q.options.map((option,i)=>`<button type="button" data-action="quiz-answer" data-answer="${safe(option)}" ${response?'disabled':''} class="q96-option ${answerShown&&option===q.answer?'is-correct':answerShown&&option===response.chosen&&!response.correct?'is-wrong':response&&option===response.chosen?'is-selected':''}"><small>${String.fromCharCode(65+i)}</small><span>${safe(option)}</span>${response&&option===response.chosen?`<b>선택</b>`:''}</button>`).join('')}</div>
+ <div class="q96-options" role="group" aria-label="정답 선택">${q.options.map((option,i)=>`<button type="button" data-action="quiz-answer" data-answer="${safe(option)}" ${response?'disabled':''} class="q96-option ${answerShown&&isCorrectAnswer(q,option)?'is-correct':answerShown&&option===response.chosen&&!response.correct?'is-wrong':response&&option===response.chosen?'is-selected':''}"><small>${String.fromCharCode(65+i)}</small><span>${safe(option)}</span>${response&&option===response.chosen?`<b>선택</b>`:''}</button>`).join('')}</div>
  ${answerShown?`<div class="q96-feedback ${response.correct?'success':'fail'}" role="status"><b>${response.correct?'정답이에요.':'정답을 확인해 보세요.'}</b><p>${safe(q.explanation)}</p></div>`:response?`<p class="q96-pending" role="status">답안 선택 완료 · 실전 세트 종료 후 정답이 공개됩니다.</p>`:''}
  <div class="q96-footer"><p>${q.category==='ear'?'음악 소리를 다시 들을 수 있어요.':'하나의 정답을 선택하세요.'}</p><button type="button" class="btn primary" data-action="quiz-next" ${response?'':'disabled'}>${index+1===s.questions.length?'결과 확인':'다음 문제'} ${icon('chevron',16)}</button></div>
  </section>`;
@@ -475,9 +501,9 @@ function vocalPractice(){const tgt=Number.isInteger(state.voiceTarget)?state.voi
 <section class="panel"><div class="panel-head"><div><span class="mini-label">TAKE A / TAKE B</span><h3>녹음해서 직접 듣고 판단하기</h3></div></div><p class="small-muted">같은 문장·멜로디를 편안한 목소리로 두 번 녹음한 다음, 타이밍·음높이·발음·음색을 비교해 봐. 녹음 데이터는 현재 탭의 메모리에만 존재해.</p><div class="record-takes">${['A','B'].map(slot=>`<div class="record-take"><strong>Take ${slot}</strong>${btn('record-toggle',recordingSlot()===slot?'■ 녹음 정지':'● 녹음 시작',recordingSlot()===slot?'btn secondary':'btn primary',`data-slot="${slot}"`)}${clipUrl(slot)?`<audio controls preload="metadata" src="${clipUrl(slot)}" aria-label="Take ${slot} 재생"></audio><a class="btn secondary record-download" href="${clipUrl(slot)}" download="${clipDownloadName(slot)}">Take ${slot} 파일 저장</a>`:'<span class="small-muted">아직 녹음 없음</span>'}</div>`).join('')}</div><div class="error-text" id="record-error"></div><p class="footnote">브라우저에 따라 다운로드 파일의 실제 형식이 webm이나 mp4일 수 있습니다. 저장하지 않은 녹음은 새로고침하면 사라집니다. A/B 재생 결과만으로 발성 기전은 판정할 수 없습니다.</p></section>
 <section class="panel"><div class="panel-head"><div><span class="mini-label">LESSON REVIEW</span><h3>내가 들은 차이 기록</h3></div></div><label class="voice-note-label" for="voice-observation">선생님 피드백, 발음 변화, 내 감각, 소리에서 확인된 특징을 구분해서 기록해 보세요.</label><textarea id="voice-observation" rows="5" maxlength="1800" placeholder="예: Take A는 음정 진입이 빨랐고, Take B는 발음이 선명하게 들렸어. 이건 내 청각적 판단이며 성대의 실제 움직임을 직접 측정한 건 아냐.">${safe(state.voiceNotes)}</textarea><div class="voice-note-actions">${btn('voice-note-save','관찰 메모 저장','btn primary small')}<span id="voice-note-status" role="status">이 기기의 브라우저에만 저장</span></div></section>
 ${infoBox('녹음이나 분석 중 통증·어지러움·목소리 이상이 느껴지면 즉시 멈추세요. 강하게 밀어붙이거나 오래 소리를 유지해야 하는 훈련은 필요하지 않습니다.')}`;}
-function vocal(){return `${pageHeader('VOICE SCIENCE / BETA ${APP_VERSION}','보컬 연구실','성대가 어떻게 소리를 만드는지 배우고, 직접 소리를 들어보고, 내 목소리도 확인해요.')}${vocalViewNav()}${vocalSteps()}${state.vocalView==='science'?vocalScience():state.vocalView==='listen'?vocalListen():vocalPractice()}`;}
+function vocal(){return `${pageHeader('VOICE SCIENCE / BETA '+APP_VERSION,'보컬 연구실','성대가 어떻게 소리를 만드는지 배우고, 직접 소리를 들어보고, 내 목소리도 확인해요.')}${vocalViewNav()}${vocalSteps()}${state.vocalView==='science'?vocalScience():state.vocalView==='listen'?vocalListen():vocalPractice()}`;}
 function ensureStudio(){try{state.studioProject=normalizeStudioProject(state.studioProject||newStudioProject(state.root,state.mode,state.bpm))}catch{state.studioProject=newStudioProject(state.root,state.mode,state.bpm)}return state.studioProject;}
-function persistStudio(){if(state.studioProject){state.melodyNotes=state.melodyNotes.filter(x=>Number.isInteger(x.step)&&x.step>=0&&x.step<state.studioProject.bars.length*4&&Number.isInteger(x.midi)&&x.midi>=48&&x.midi<=83).slice(0,256);state.studioProject.melody=state.melodyNotes.map(x=>({midi:x.midi,step:x.step}));}localStorage.setItem('musiclab-studio-active',JSON.stringify(state.studioProject));localStorage.setItem('musiclab-melody',JSON.stringify(state.melodyNotes));}
+function persistStudio(){if(state.studioProject){state.melodyNotes=state.melodyNotes.filter(x=>Number.isInteger(x.step)&&x.step>=0&&x.step<state.studioProject.bars.length*4&&Number.isInteger(x.midi)&&x.midi>=48&&x.midi<=83).slice(0,256);state.studioProject.melody=state.melodyNotes.map(x=>({...x}));}localStorage.setItem('musiclab-studio-active',JSON.stringify(state.studioProject));localStorage.setItem('musiclab-melody',JSON.stringify(state.melodyNotes));}
 function studioStop(){
  if(backingPlayer){const b=backingPlayer;backingPlayer=null;b.stop();}
  state.backingPlaying=false;state.backingBar=null;
@@ -510,28 +536,42 @@ function studioPlayback(){
   const start=context().currentTime+.12;
   for(const ev of events){for(const midi of studioVoicing(ev.symbol,ev.voicing))note(midi,start+ev.start*beat,ev.beats*beat*.90,{volume:.16});
    timers.push(setTimeout(()=>{if(!active||state.tab!=='compose')return;state.playing=ev.bar;document.querySelectorAll('.studio092-bar').forEach((b,i)=>b.classList.toggle('playing',i===ev.bar));},(ev.start*beat+.12)*1000));}
-  for(const x of state.melodyNotes){if(Number.isInteger(x.step)&&x.step>=0&&x.step<p.bars.length*4)note(x.midi,start+x.step*beat,beat*.85,{volume:.15});}
+  for(const x of state.melodyNotes){if(Number.isInteger(x.step)&&x.step>=0&&x.step<p.bars.length*4)note(x.midi,start+x.step*beat,beat*melodyDuration(x.duration)*.85,{volume:.15});}
   timers.push(setTimeout(()=>{if(!active)return;state.playing=-1;document.querySelectorAll('.studio092-bar').forEach(b=>b.classList.remove('playing'));if(state.studioLoop){timers=[];cycle();}else{active=false;seqStop=null;}},(duration+.18)*1000));
  }
  seqStop=()=>{active=false;timers.forEach(clearTimeout);timers=[];stopAllScheduled();state.playing=-1;};
  cycle();
 }
-function studioSaveNamed(){const p=ensureStudio();if(!p.title.trim())p.title='새 코드 진행';const copy=cloneProject(p);const now=new Date().toISOString();const existing=state.studioProjects.findIndex(x=>x.title===copy.title);const record={...copy,melody:state.melodyNotes.map(x=>({midi:x.midi,step:x.step})),backing:normalizeBacking(state.backing,copy.bars.length),updatedAt:now};if(existing>=0)state.studioProjects.splice(existing,1);state.studioProjects=[record,...state.studioProjects].slice(0,20);localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects));studioRender();}
+function studioSaveNamed(){const p=ensureStudio();if(!p.title.trim())p.title='새 코드 진행';const copy=cloneProject(p);const now=new Date().toISOString();const existing=state.studioProjects.findIndex(x=>x.title===copy.title);const record={...copy,melody:state.melodyNotes.map(x=>({...x})),backing:normalizeBacking(state.backing,copy.bars.length),updatedAt:now};if(existing>=0)state.studioProjects.splice(existing,1);state.studioProjects=[record,...state.studioProjects].slice(0,20);localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects));studioRender();}
+function youtubeBackingPanel(){
+ const watch=youtubeBacking?`https://www.youtube.com/watch?v=${youtubeBacking.id}&t=${youtubeBacking.start}s`:'';
+ return `<section class="backing-lab" aria-labelledby="youtube-backing-title">
+ <h3 id="youtube-backing-title">유튜브 백킹 트랙</h3>
+ <div class="backing-options"><label>유튜브 링크<input id="studio-youtube-url" type="url" value="${safe(watch)}" placeholder="https://youtu.be/…"></label>
+ <label>시작 시간(초)<input id="studio-youtube-start" type="number" min="0" step="1" placeholder="링크에 지정된 시간"></label></div>
+ ${btn('studio-youtube-load','플레이어 열기','btn secondary')}
+ <span id="studio-youtube-status" role="status"></span>
+ ${youtubeBacking?`<iframe class="studio-youtube-frame" title="유튜브 백킹 트랙" src="https://www.youtube.com/embed/${youtubeBacking.id}?start=${youtubeBacking.start}" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe><a href="${safe(watch)}" target="_blank" rel="noopener noreferrer">YouTube에서 열기</a> ${btn('studio-youtube-close','플레이어 닫기','btn secondary')}`:''}
+ </section>`;
+}
 function compose(){const p=ensureStudio(),[currentBar,currentSlot]=state.studioSelected,active=p.bars[currentBar]?.segments[currentSlot]||p.bars[0].segments[0],suggestions=studioSuggestions(p);
  const bk=normalizeBacking(state.backing,p.bars.length),barOptions=Array.from({length:p.bars.length},(_,i)=>i+1);state.backing=bk;
  return `${pageHeader('CHORD STUDIO 2.0 / BETA '+APP_VERSION,'코드 스튜디오','코드를 편집하고 16마디까지 멜로디를 더해 MIDI로 내보내세요.')}
  <section class="panel studio092-head"><div class="studio092-heading"><div><span class="mini-label">MY CHORD PROJECT</span><label class="studio092-project-label">프로젝트 이름<input id="studio-title" maxlength="70" value="${safe(p.title)}" aria-label="프로젝트 이름"></label></div><span class="pill">4/4 · ${p.bars.length}마디</span></div>
  <div class="studio092-toolbar"><label>BPM<input type="number" id="studio-bpm" min="40" max="220" value="${p.bpm}"></label>${btn('studio-play',`${icon('play',17)} 전체 재생`)}${btn('studio-stop','■ 정지','btn secondary')}<label class="studio093-loop"><input type="checkbox" id="studio-loop" ${state.studioLoop?'checked':''}> 반복 재생</label>${btn('studio-midi',`${icon('download',17)} MIDI`,'btn secondary')}</div>
- <section class="backing-lab" aria-labelledby="backing-heading"><div class="backing-heading"><div><span class="mini-label">BACKING TRACK LAB · NEW</span><h3 id="backing-heading">코드 진행을 반주로 연습</h3><p>현재 프로젝트의 코드를 드럼·베이스·피아노로 재생해요. 원하는 구간을 반복하면서 기타를 연습하세요.</p></div><div class="backing-control"><button type="button" class="btn primary" data-action="studio-backing-toggle">${state.backingPlaying?'■ 반주 정지':'▶ 반주 시작'}</button><span id="backing-status" role="status">${state.backingPlaying?(state.backingBar?`연주 중 · ${state.backingBar}마디`:'재생 준비 중'):'정지됨'}</span></div></div>
+ <section class="backing-lab" aria-labelledby="backing-heading"><div class="backing-heading"><div><span class="mini-label">BACKING TRACK LAB · NEW</span><h3 id="backing-heading">코드 진행을 반주로 연습</h3><p>현재 프로젝트의 코드를 드럼·베이스·건반·기타 반주를 만들고, 원하는 구간에서 노래하거나 기타를 연습하세요.</p></div><div class="backing-control"><button type="button" class="btn primary" data-action="studio-backing-toggle">${state.backingPlaying?'■ 반주 정지':'▶ 반주 시작'}</button><span id="backing-status" role="status">${state.backingPlaying?(state.backingBar?`연주 중 · ${state.backingBar}마디`:'재생 준비 중'):'정지됨'}</span></div></div>
  <div class="backing-options"><label>반주 스타일<select id="backing-style">${Object.entries(BACKING_STYLES).map(([key,style])=>`<option value="${key}" ${bk.style===key?'selected':''}>${style.label}</option>`).join('')}</select></label><label>시작 마디<select id="backing-start">${barOptions.map(n=>`<option value="${n}" ${bk.startBar===n?'selected':''}>${n}마디</option>`).join('')}</select></label><label>마지막 마디<select id="backing-end">${barOptions.filter(n=>n>=bk.startBar).map(n=>`<option value="${n}" ${bk.endBar===n?'selected':''}>${n}마디</option>`).join('')}</select></label></div>
+ <div class="backing-options"><label>생성 키<select id="backing-gen-root">${ROOTS.map(root=>`<option ${p.root===root?'selected':''}>${safe(root)}</option>`).join('')}</select></label><label>장조·단조<select id="backing-gen-mode"><option value="major">장조</option><option value="minor" ${p.mode==='minor'?'selected':''}>단조</option></select></label><label>마디 수<input type="number" id="backing-gen-bars" min="1" max="16" value="${bk.style==='blues'?12:p.bars.length}"></label><label>곡 구조<select id="backing-gen-form"><option value="loop">한 구간</option><option value="contrast">A–B</option></select></label></div>
+ ${btn('studio-generate-form','선택 장르로 코드 진행 바꾸기','btn secondary')}
  <p class="backing-style-desc">${safe(BACKING_STYLES[bk.style].desc)} · BPM은 위의 코드 스튜디오 설정을 사용합니다.</p>
  <div class="backing-checks"><label><input type="checkbox" id="backing-loop" ${bk.loop?'checked':''}> 구간 반복</label><label><input type="checkbox" id="backing-countin" ${bk.countIn?'checked':''}> 시작 전 4박 카운트인</label></div>
- <div class="backing-mixer">${[['drums','드럼'],['bass','베이스'],['piano','피아노']].map(([key,name])=>`<label><span>${name} <output id="backing-label-${key}">${bk.mix[key]}%</output></span><input type="range" min="0" max="100" step="5" value="${bk.mix[key]}" data-backing-mix="${key}" aria-label="${name} 음량"></label>`).join('')}</div>
- <p class="small-muted">반주는 새 음원 다운로드 없이 브라우저에서 생성됩니다. 드럼과 베이스는 합성음, 피아노는 기존 실제 샘플을 사용해요.</p></section>
+ <div class="backing-mixer">${[['drums','드럼'],['bass','베이스'],['piano','건반'],['guitar','기타']].map(([key,name])=>`<label><span>${name} <output id="backing-label-${key}">${bk.mix[key]}%</output></span><input type="range" min="0" max="100" step="5" value="${bk.mix[key]}" data-backing-mix="${key}" aria-label="${name} 음량"><span><button type="button" class="btn secondary small" data-action="studio-backing-mute" data-part="${key}" aria-pressed="${bk.muted?.includes(key)??false}">${name} 음소거</button><button type="button" class="btn secondary small" data-action="studio-backing-solo" data-part="${key}" aria-pressed="${bk.solo===key}">${name} 솔로</button></span></label>`).join('')}</div>
+ <p class="small-muted">MIDI와 WAV는 선택한 구간의 반주를 한 번 내보냅니다. WAV의 건반은 합성음이에요.</p>${btn('studio-backing-midi','반주 MIDI','btn secondary')}${btn('studio-backing-wav','반주 WAV','btn secondary')}<p id="backing-export-status" role="status"></p></section>
+ ${youtubeBackingPanel()}
  <div class="studio092-project-actions">${btn('studio-save','프로젝트 저장','btn secondary')}${btn('studio-new','새 프로젝트','btn ghost dark')}${btn('studio-add-bar','+ 마디 추가','btn secondary')}${btn('studio-duplicate-bar','선택 마디 복제','btn secondary')}${btn('studio-remove-bar','− 마지막 마디 삭제','btn ghost dark')}</div>
  <div class="studio092-bulk"><label for="studio-bulk">진행을 한 번에 입력</label><div><input id="studio-bulk" type="text" autocomplete="off" spellcheck="false" placeholder="F#m7 B7 EM7 C#m7"><button class="btn secondary" data-action="studio-bulk-apply">진행 만들기</button></div><small>코드를 공백 또는 →로 구분 · 1코드 = 1마디 · 최대 16마디</small></div>
  <p class="small-muted">마디를 누르면 편집할 수 있어요. 코드 이름은 <b>F#m7, BbM7, C7(#9), C/E</b>처럼 직접 입력할 수 있어요.</p>
- <div class="studio092-bars">${p.bars.map((bar,b)=>`<div class="studio092-bar ${state.playing===b?'playing':''}"><div class="studio092-bar-head"><span>BAR ${String(b+1).padStart(2,'0')}</span><span>4/4</span></div><div class="studio092-segments">${bar.segments.map((seg,i)=>`<button type="button" class="studio092-slot ${currentBar===b&&currentSlot===i?'selected':''}" data-action="studio-select" data-bar="${b}" data-slot="${i}" style="flex:${seg.beats}"><strong>${safe(seg.symbol)}</strong><small>${seg.beats}박 · ${seg.voicing===0?'기본형':seg.voicing+'전위'}</small></button>`).join('')}</div></div>`).join('')}</div>
+ <div class="studio092-bars">${p.bars.map((bar,b)=>`<div class="studio092-bar ${state.playing===b?'playing':''}"><div class="studio092-bar-head"><span>BAR ${String(b+1).padStart(2,'0')}</span><span>4/4</span></div><div class="studio092-segments">${bar.segments.map((seg,i)=>`<button type="button" class="studio092-slot ${currentBar===b&&currentSlot===i?'selected':''}" data-action="studio-select" data-bar="${b}" data-slot="${i}" style="flex:${seg.beats}"><strong>${safe(seg.symbol)}</strong><small>${safe(analyzeStudioChord(p,seg.symbol,bar.segments[i+1]?.symbol??p.bars[b+1]?.segments[0]?.symbol))}</small><small>${seg.beats}박 · ${seg.voicing===0?'기본형':seg.voicing+'전위'}</small></button>`).join('')}</div></div>`).join('')}</div>
  </section>
  <section class="panel studio092-editor"><div class="panel-head"><div><span class="mini-label">CHORD EDITOR</span><h3>${currentBar+1}마디 · ${currentSlot+1}번째 코드 편집</h3></div></div>
  <div class="studio092-edit-grid"><label>코드 이름<div class="studio092-code-row"><input id="studio-code" spellcheck="false" autocomplete="off" value="${safe(active.symbol)}" aria-label="선택한 코드 이름">${btn('studio-set-code','적용')}</div></label><label>전위 선택<select id="studio-voicing">${[0,1,2,3].map(n=>`<option value="${n}" ${n===active.voicing?'selected':''}>${n===0?'기본형':n+'번째 전위'}</option>`).join('')}</select></label></div>
@@ -544,14 +584,19 @@ function compose(){const p=ensureStudio(),[currentBar,currentSlot]=state.studioS
  <details class="panel studio092-melody"><summary>멜로디 피아노 롤 · 최대 16마디 편집</summary><p class="small-muted">4마디씩 이동하며 음을 넣거나 다시 누르면 지울 수 있어요. 메인 화면의 코드 진행과 별도 멜로디 MIDI 트랙에 함께 반영돼요.</p>
  <div class="studio093-roll-nav"><button type="button" data-action="studio-roll-prev" ${state.studioRollPage<=0?'disabled':''}>← 이전 4마디</button><span>${state.studioRollPage*4+1}–${Math.min((state.studioRollPage+1)*4,p.bars.length)}마디 / 총 ${p.bars.length}마디</span><button type="button" data-action="studio-roll-next" ${state.studioRollPage>=Math.ceil(p.bars.length/4)-1?'disabled':''}>다음 4마디 →</button></div>
  ${pianoRollSVG(Array.from({length:4},(_,i)=>p.bars[state.studioRollPage*4+i]?studioVoicing(p.bars[state.studioRollPage*4+i].segments[0].symbol):[]),state.melodyNotes,state.studioRollPage*4)}
- <div class="studio092-melody-actions">${btn('studio-roll-clear-page','현재 구간의 멜로디 지우기','btn secondary')}${btn('roll-clear','전체 멜로디 지우기','btn secondary')}${btn('studio-midi','코드 + 멜로디 MIDI 저장','btn primary')}</div></details>
+ <div class="studio092-melody-actions"><label>MIDI 멜로디 가져오기 <input id="studio-midi-file" type="file" accept=".mid,.midi,audio/midi"></label>${btn('studio-roll-clear-page','현재 구간의 멜로디 지우기','btn secondary')}${btn('roll-clear','전체 멜로디 지우기','btn secondary')}${btn('studio-midi','코드 + 멜로디 MIDI 저장','btn primary')}</div></details>
  ${infoBox('작업은 자동으로 이 브라우저에 임시 저장돼요. 별도 프로젝트로 보관하려면 「프로젝트 저장」을 누르세요. 크로매틱·청각훈련과 기타 기록은 기존대로 유지됩니다.')}`;
 }
 function learningOverview(){return `<section class="panel"><div class="panel-head"><div><span class="mini-label">LEARNING OVERVIEW</span><h3>분야별 문제 성취도</h3></div>${btn('nav-quiz','문제 풀기','btn small')}</div><div class="beta-progress">${QUIZ_CATEGORIES.map(c=>{const rows=state.quizHistory.filter(x=>x.category===c.id),n=rows.length,ok=rows.filter(x=>x.correct).length,p=n?Math.round(ok/n*100):0;return `<div><strong>${safe(c.label||c.name||c.id)}</strong><span>${n?`${ok}/${n} · ${p}%`:'기록 없음'}</span><progress max="100" value="${p}" aria-label="정답률"></progress></div>`}).join('')}</div><p class="footnote">완료한 문제 연구실 세션 기준입니다. 기록이 없는 분야는 정답률을 표시하지 않습니다.</p></section>`;}
+function practiceRoutine(){
+ const plan=buildPracticePlan({quiz:state.quizHistory,ear:state.earHistory,minutes:state.practiceMinutes});
+ return `<section class="panel"><div class="panel-head"><h3>오늘의 추천 연습</h3><label>시간 <select id="practice-minutes">${[10,20,30].map(min=>`<option ${min===state.practiceMinutes?'selected':''}>${min}</option>`).join('')}</select>분</label></div>
+ <ul>${plan.routine.map(item=>`<li><button class="btn secondary small" data-action="practice-open" data-category="${item.category}" data-tab="${item.tab}">${item.name} · ${item.minutes}분</button> ${item.detail} <small>${item.total?`최근 오답 ${item.mistakes}/${item.total}`:'기록 없음'}</small></li>`).join('')}</ul></section>`;
+}
 function journal(){const sorted=[...state.entries].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12),today=new Date().toLocaleDateString('sv-SE');
  return `${pageHeader('PRACTICE JOURNAL','연습 기록','레슨에서 배운 내용과 연습 목표를 남기고 기록을 계속 쌓아보세요.')}
  <div class="stat-grid"><div class="stat"><div class="stat-label">${icon('clock',16)} 전체 연습 시간</div><div class="stat-number">${allMinutes()}<small>분</small></div></div><div class="stat"><div class="stat-label">${icon('journal',16)} 기록 수</div><div class="stat-number">${state.entries.length}<small>개</small></div></div><div class="stat"><div class="stat-label">${icon('target',16)} 오늘의 기록</div><div class="stat-number">${recentMinutes()}<small>분</small></div></div></div>
- ${learningOverview()}<section class="panel theory-journal-summary"><div class="panel-head"><div><span class="mini-label">GUITAR LEARNING</span><h3>기타 자동 기록</h3></div></div><div class="theory-summary-row"><div><b>${state.chromaticHistory.length}</b><span>크로매틱 연습 횟수</span></div><div><b>${state.theoryHistory.length}</b><span>지판 학습 횟수</span></div><div><b>${state.libGripFavorites.length}</b><span>저장한 코드 운지</span></div></div><div class="theory-recent">${state.theoryHistory.slice(-4).reverse().map(h=>`<div><b>${safe(h.root)} ${safe(h.quality)} · ${safe(h.mode)}</b><span>${safe(h.date)}</span></div>`).join('')||'<p class="small-muted">아직 CAGED·트라이어드·아르페지오 기록이 없습니다.</p>'}</div></section>
+ ${practiceRoutine()}${learningOverview()}<section class="panel theory-journal-summary"><div class="panel-head"><div><span class="mini-label">GUITAR LEARNING</span><h3>기타 자동 기록</h3></div></div><div class="theory-summary-row"><div><b>${state.chromaticHistory.length}</b><span>크로매틱 연습 횟수</span></div><div><b>${state.theoryHistory.length}</b><span>지판 학습 횟수</span></div><div><b>${state.libGripFavorites.length}</b><span>저장한 코드 운지</span></div></div><div class="theory-recent">${state.theoryHistory.slice(-4).reverse().map(h=>`<div><b>${safe(h.root)} ${safe(h.quality)} · ${safe(h.mode)}</b><span>${safe(h.date)}</span></div>`).join('')||'<p class="small-muted">아직 CAGED·트라이어드·아르페지오 기록이 없습니다.</p>'}</div></section>
  <div class="two-col top-align"><div class="panel"><span class="mini-label">NEW ENTRY</span><h3>연습 내용 기록</h3><form id="entry-form" class="entry-form"><label>날짜<input type="date" name="date" value="${today}" required></label><div class="form-pair"><label>연습 분야<select name="category"><option>보컬</option><option>기타</option><option>청음</option><option>화성학</option><option>작곡</option><option>기타 연습</option></select></label><label>시간 (분)<input type="number" name="minutes" min="1" max="600" value="30" required></label></div><label>레슨 노트 · 연습 메모<textarea name="memo" rows="4" maxlength="1500" placeholder="오늘의 목표, 느낀 점, 다음 레슨 때 확인할 내용..."></textarea></label><button type="submit" class="btn primary full">${icon('check',17)} 기록 저장</button></form></div>
  <div class="panel"><div class="panel-head"><div><span class="mini-label">HISTORY</span><h3>최근 연습</h3></div></div><div class="entry-list">${sorted.length?sorted.map(e=>`<div class="entry"><div><span class="pill">${safe(e.category)}</span><small>${safe(e.date)} · ${Number(e.minutes)}분</small></div><p>${safe(e.memo)||'메모 없음'}</p><button class="text-btn" data-action="delete-entry" data-id="${safe(e.id)}">삭제</button></div>`).join(''):'<div class="empty-state">아직 저장된 기록이 없습니다.<br>첫 번째 연습을 기록해 보세요.</div>'}</div></div></div>
  <div class="panel"><div class="panel-head"><div><span class="mini-label">DATA MANAGEMENT</span><h3>기록 백업</h3></div></div><div class="backup-controls">${btn('export',`${icon('download',17)} JSON 내보내기`,'btn secondary')}<label class="btn secondary file-btn">JSON 가져오기<input type="file" id="import-file" accept=".json,application/json" hidden></label></div><p class="footnote">데이터는 현재 브라우저의 로컬 저장소에만 남습니다. 다른 기기로 옮길 때는 JSON을 내보낸 뒤 가져오세요. 새 파일을 가져오면 기존 기록과 청음 통계가 교체됩니다.</p></div>`;
@@ -575,6 +620,12 @@ function render(){
 function navTo(id){stopGuitarAudio();if(voiceCompareTimer){clearTimeout(voiceCompareTimer);voiceCompareTimer=null;}if(recordingSlot())stopRecording();if(larynxStop){larynxStop();larynxStop=null;}state.larynxAnimating=false;if(!NAV.some(n=>n[0]===id))return;if(micStop){micStop();micStop=null;state.micActive=false;}if(backingPlayer)studioStop();if(seqStop){seqStop();seqStop=null}state.playing=-1;state.tab=id;state.micError='';render();window.scrollTo({top:0,behavior:'instant'});}
 function playScale(){const sc=scaleOf(state.root,state.tab==='theory'?state.theoryScale:state.mode),oct=state.tab==='theory'?state.theoryOctave:4;arpeggio([...sc.notes.map(n=>noteToMidi(n,oct)),noteToMidi(sc.notes[0],oct+1)],.19)}
 function handleAction(target,e){const a=target.dataset.action;
+ if(a==='practice-open'){
+  const {tab,category}=target.dataset;
+  if(tab==='quiz'&&QUIZ_CATEGORY_IDS.includes(category)){state.quizCategory=category;state.quizSession=null;}
+  if(tab==='ear'){state.earMode=category==='rhythm'?'tap-rhythm':'interval';state.question=null;state.feedback=null;}
+  handleAction({dataset:{action:'nav-'+tab}},e);return;
+ }
  if(a==='quiz-category'){if(QUIZ_CATEGORY_IDS.includes(target.dataset.category))state.quizCategory=target.dataset.category;render();return;}
  if(a==='quiz-mode'){if(['learn','exam','review'].includes(target.dataset.mode))state.quizMode=target.dataset.mode;render();return;}
  if(a==='quiz-start'){startQuiz();return;}
@@ -593,9 +644,55 @@ function handleAction(target,e){const a=target.dataset.action;
    if(a==='studio-roll-clear-page'){state.melodyNotes=state.melodyNotes.filter(x=>x.step<state.studioRollPage*16||x.step>=(state.studioRollPage+1)*16);studioRender();document.querySelector('.studio092-melody')?.setAttribute('open','');return;}
    if(a==='studio-select'){state.studioSelected=[Number(target.dataset.bar),Number(target.dataset.slot)];render();return;}
    if(a==='studio-stop'){studioStop();render();return;}
+   if(a==='studio-backing-midi'){downloadMidi(buildBackingMidi(p,state.backing),'music-lab-backing.mid');return;}
+   if(a==='studio-backing-wav'){
+    if(target.disabled)return;
+    target.disabled=true;
+    const status=$('#backing-export-status');if(status)status.textContent='WAV 생성 중…';
+    renderBackingWav(p,state.backing).then(buffer=>{
+     const url=URL.createObjectURL(new Blob([buffer],{type:'audio/wav'}));
+     const link=document.createElement('a');link.href=url;link.download='music-lab-backing.wav';link.click();
+     setTimeout(()=>URL.revokeObjectURL(url),30000);
+     if(status)status.textContent='WAV 생성 완료';
+    }).catch(error=>{if(status)status.textContent=error.message;}).finally(()=>{target.disabled=false;});
+    return;
+   }
+   if(a==='studio-backing-mute'||a==='studio-backing-solo'){
+    const part=target.dataset.part;if(!BACKING_PARTS.includes(part))return;
+    const muted=state.backing.muted??[];
+    const toggled=a.endsWith('mute')?{muted:muted.includes(part)?muted.filter(item=>item!==part):[...muted,part]}
+     :{solo:state.backing.solo===part?null:part};
+    state.backing=normalizeBacking({...state.backing,...toggled},p.bars.length);
+    backingPlayer?.setSettings(state.backing);backingPersist();
+    document.querySelectorAll('[data-action="studio-backing-solo"],[data-action="studio-backing-mute"]').forEach(button=>{
+     const key=button.dataset.part;
+     const pressed=button.dataset.action.endsWith('mute')?state.backing.muted?.includes(key)??false:state.backing.solo===key;
+     button.setAttribute('aria-pressed',String(pressed));
+    });return;
+   }
+   if(a==='studio-youtube-load'){
+    const video=parseYoutubeBacking($('#studio-youtube-url')?.value);
+    const at=$('#studio-youtube-start')?.value?.trim();
+    if(!video||(at&&(!Number.isSafeInteger(Number(at))||Number(at)<0))){
+     const status=$('#studio-youtube-status');
+     if(status)status.textContent='올바른 유튜브 주소와 시작 시간을 입력해 주세요.';
+     return;
+    }
+    studioStop();if(at)video.start=Number(at);youtubeBacking=video;render();return;
+   }
+   if(a==='studio-youtube-close'){youtubeBacking=null;render();return;}
    if(a==='studio-backing-toggle'){studioBackingToggle();return;}
    if(a==='studio-play'){studioPlayback();return;}
    if(a==='studio-play-one'){const cur=p.bars[bar]?.segments[slot];if(cur)chord(studioVoicing(cur.symbol,cur.voicing),undefined,.95);return;}
+   if(a==='studio-generate-form'){
+    studioStop();
+    state.studioProject=generateStudioForm(p,{style:state.backing.style,root:$('#backing-gen-root')?.value,
+     mode:$('#backing-gen-mode')?.value,bars:$('#backing-gen-bars')?.value,form:$('#backing-gen-form')?.value,
+     variant:Math.floor(Math.random()*2)});
+    state.studioSelected=[0,0];state.studioRollPage=0;
+    state.backing=normalizeBacking({...state.backing,startBar:1,endBar:state.studioProject.bars.length},state.studioProject.bars.length);
+    backingPersist();studioRender();return;
+   }
    if(a==='studio-midi'){downloadMidi(buildStudioMidi(p,state.melodyNotes),'music-lab-studio.mid');return;}
    if(a==='studio-guitar'){const cur=p.bars[bar]?.segments[slot],d=cur&&parseChord(cur.symbol);if(d){studioStop();state.libRoot=d.root;state.libQuality=d.quality;state.libBass=d.bass;state.libSelected=0;state.guitarView='library';navTo('guitar');}return;}
    if(a==='studio-bulk-apply'){
@@ -699,7 +796,19 @@ function handleAction(target,e){const a=target.dataset.action;
  else if(a==='play-guitar-scale'){const ints=INTERVALS[state.guitarScale]||INTERVALS.major;arpeggio([...ints.map(i=>60+pitchClass(state.root)+i),72+pitchClass(state.root)],.19)}
  else if(a==='select-chord'||a==='guitar-chord'){state.selectedChord=Number(target.dataset.index);if(a==='guitar-chord')state.guitarDisplay='chord';render()}
  else if(a==='play-chord')chord(chordMidi(state.root,state.mode,state.selectedChord,state.seventh));
+ else if(a==='ear-review'){
+  state.earMode=target.dataset.mode;state.earSession={completed:0,correct:0};newQuestion();render();
+  if(state.earMode!=='read')playQuestion();
+ }
  else if(a==='ear-mode'){state.earMode=target.dataset.mode;state.question=null;state.feedback=null;state.melodyInputs=[];state.earSession={completed:0,correct:0};render()}
+ else if(a==='ear-tap'){
+  const q=state.question;if(q?.kind!=='tap-rhythm'||state.feedback)return;
+  state.rhythmTaps.push(performance.now());
+  if(state.rhythmTaps.length===q.beats.length){
+   const score=gradeRhythm(q,state.rhythmTaps);
+   state.feedback={isCorrect:score.correct,error:score.error};storeTraining(score.correct,q.kind);render();
+  }else{const count=$('#rhythm-tap-count');if(count)count.textContent=state.rhythmTaps.length;}
+ }
  else if(a==='ear-reference'){note(60,undefined,1.0)}
  else if(a==='train-key'){
   const midi=Number(target.dataset.midi),q=state.question;
@@ -796,7 +905,7 @@ function handleAction(target,e){const a=target.dataset.action;
  else if(a==='comp-preset'){state.compDegrees=[[0,4,5,3],[0,5,3,4],[1,4,0,5]][Number(target.dataset.id)].slice();render()}
  else if(a==='delete-entry'){state.entries=state.entries.filter(e=>String(e.id)!==target.dataset.id);saveEntries();render()}
  else if(a==='export'){
-  const payload={version:10,chromaticSettings:{pattern:state.chromaticPattern,bpm:state.chromaticBpm},backing:normalizeBacking(state.backing,ensureStudio().bars.length),studio:{...ensureStudio(),melody:state.melodyNotes},studioProjects:state.studioProjects,harmonyHistory:state.harmonyHistory,problemRecent:state.problemRecent,quizHistory:state.quizHistory,quizRecent:state.quizRecent,guitarTheory:state.theoryHistory,favoriteGrips:state.libGripFavorites,chromatic:state.chromaticHistory,favoriteChords:state.libFavorites,recentChords:state.libRecent,guitarSight:state.guitarSightHistory,exportedAt:new Date().toISOString(),entries:state.entries,ear:state.stats,training:state.earHistory,voiceNotes:state.voiceNotes,voiceTarget:state.voiceTarget};
+  const payload={version:11,practiceMinutes:state.practiceMinutes,chromaticSettings:{pattern:state.chromaticPattern,bpm:state.chromaticBpm},backing:normalizeBacking(state.backing,ensureStudio().bars.length),studio:{...ensureStudio(),melody:state.melodyNotes},studioProjects:state.studioProjects,harmonyHistory:state.harmonyHistory,problemRecent:state.problemRecent,quizHistory:state.quizHistory,quizRecent:state.quizRecent,guitarTheory:state.theoryHistory,favoriteGrips:state.libGripFavorites,chromatic:state.chromaticHistory,favoriteChords:state.libFavorites,recentChords:state.libRecent,guitarSight:state.guitarSightHistory,exportedAt:new Date().toISOString(),entries:state.entries,ear:state.stats,training:state.earHistory,voiceNotes:state.voiceNotes,voiceTarget:state.voiceTarget};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),el=document.createElement('a');el.href=url;el.download='music-lab-backup.json';el.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
 }
@@ -831,7 +940,20 @@ document.addEventListener('click',e=>{const target=e.target.closest('[data-actio
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='studio-bulk'){e.preventDefault();document.querySelector('[data-action="studio-bulk-apply"]')?.click();}else if(e.key==='Enter'&&e.target.id==='pro-chords'){e.preventDefault();document.querySelector('[data-action="pro-generate"]')?.click();}else if(e.key==='Enter'&&e.target.id==='studio-code'){e.preventDefault();document.querySelector('[data-action="studio-set-code"]')?.click();}else if(e.key==='Enter'&&e.target.id==='chord-search'){e.preventDefault();document.querySelector('[data-action="lib-search"]')?.click();}else if((e.key==='Enter'||e.key===' ')&&e.target.matches('svg [data-action="play-midi"]')){e.preventDefault();state.tab==='guitar'&&['library','theory','fretboard'].includes(state.guitarView)?playSelectedGuitarNote(Number(e.target.dataset.midi)):note(Number(e.target.dataset.midi),undefined,.6);}});
 document.addEventListener('change',async e=>{
  const t=e.target;
- if(t.id==='q96-level'){state.quizLevel=Math.max(1,Math.min(3,Number(t.value)||1));render();return;}
+ if(t.id==='practice-minutes'){state.practiceMinutes=Number(t.value);localStorage.setItem('musiclab-practice-minutes',JSON.stringify(state.practiceMinutes));render();return;}
+ if(t.id==='studio-midi-file'){
+  const file=t.files?.[0];if(!file)return;
+  try{
+   if(file.size>5000000)throw Error('MIDI 파일은 5MB 미만으로 선택하세요.');
+   const p=ensureStudio(),melody=importMelodyMidi(await file.arrayBuffer(),{maxSteps:p.bars.length*4});
+   if(!confirm('현재 멜로디를 가져온 MIDI로 교체할까요?')){t.value='';return;}
+   studioStop();state.melodyNotes=melody;studioRender();
+   document.querySelector('.studio092-melody')?.setAttribute('open','');
+  }catch(error){alert(error.message);t.value='';}
+  return;
+ }
+ if(t.id==='rhythm-level'){state.rhythmLevel=Number(t.value);state.question=null;state.feedback=null;state.rhythmTaps=[];render();return;}
+ if(t.id==='q96-level'){state.quizLevel=Math.max(1,Math.min(5,Number(t.value)||1));render();return;}
  if(t.id==='q96-count'){state.quizCount=[5,10,20].includes(Number(t.value))?Number(t.value):10;render();return;}
  if(t.id==='global-key'){state.root=t.value;state.selectedChord=0;state.harmonyQuestion=null;saveSettings();render()}
  else if(t.id==='global-mode'){state.mode=t.value;state.theoryScale=t.value;state.selectedChord=0;state.harmonyQuestion=null;saveSettings();render()}
@@ -891,7 +1013,7 @@ document.addEventListener('change',async e=>{
    const valid=data.entries.length<=10000&&data.entries.every(e=>e&&typeof e.date==='string'&&typeof e.category==='string'&&typeof e.minutes==='number'&&typeof e.memo==='string'&&String(e.memo).length<=1500);
    if(!valid)throw new Error('데이터 형식이 올바르지 않습니다.');
    if(!confirm('현재의 연습 기록과 청음 통계를 백업 파일로 교체할까요?'))return;
-   state.entries=data.entries;if(data.chromaticSettings){const c=data.chromaticSettings;if(CHROMATIC_PATTERNS.includes(c.pattern))state.chromaticPattern=c.pattern;if(Number.isInteger(c.bpm))state.chromaticBpm=Math.max(60,Math.min(120,c.bpm));saveChromaticSettings();}if(data.backing){state.backing=normalizeBacking(data.backing,16);backingPersist();}if(data.studio){try{state.studioProject=normalizeStudioProject(data.studio);state.studioRollPage=0;state.melodyNotes=state.studioProject.melody||[];persistStudio()}catch{}}if(Array.isArray(data.studioProjects)){state.studioProjects=data.studioProjects.slice(0,20).flatMap(x=>{try{return [{...normalizeStudioProject(x),backing:normalizeBacking(x.backing||state.backing,Math.max(1,Array.isArray(x.bars)?x.bars.length:4))}]}catch{return []}});localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects))}if(Array.isArray(data.harmonyHistory)){state.harmonyHistory=data.harmonyHistory.filter(x=>typeof x==='string').slice(-40);localStorage.setItem('musiclab-harmony-questions',JSON.stringify(state.harmonyHistory));}if(Array.isArray(data.quizHistory)){state.quizHistory=data.quizHistory.slice(-800).filter(x=>x&&typeof x.category==='string'&&typeof x.correct==='boolean'&&typeof x.seed==='number'&&typeof x.kind==='string');localStorage.setItem('musiclab-quiz096-history',JSON.stringify(state.quizHistory));}if(Array.isArray(data.quizRecent)){state.quizRecent=data.quizRecent.slice(-90).filter(x=>typeof x==='string');localStorage.setItem('musiclab-quiz096-recent',JSON.stringify(state.quizRecent));}if(Array.isArray(data.problemRecent)){state.problemRecent=data.problemRecent.filter(x=>typeof x==='string').slice(-50);localStorage.setItem('musiclab-problem-recent',JSON.stringify(state.problemRecent));}if(Array.isArray(data.guitarTheory)){state.theoryHistory=data.guitarTheory.slice(-500).filter(x=>x&&typeof x.date==='string'&&typeof x.root==='string'&&['caged','triad','arp','drop'].includes(x.mode));localStorage.setItem('musiclab-guitar-theory-history',JSON.stringify(state.theoryHistory));}if(Array.isArray(data.favoriteGrips)){state.libGripFavorites=data.favoriteGrips.slice(0,60).filter(g=>g&&typeof g.name==='string'&&Array.isArray(g.frets)&&g.frets.length===6&&g.frets.every(f=>f===null||(Number.isInteger(f)&&f>=0&&f<=22)));localStorage.setItem('musiclab-grip-favorites',JSON.stringify(state.libGripFavorites));}if(Array.isArray(data.favoriteChords)){state.libFavorites=data.favoriteChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,100);libraryFavoritesSave();}if(Array.isArray(data.recentChords)){state.libRecent=data.recentChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,12);localStorage.setItem('musiclab-lib-recent',JSON.stringify(state.libRecent));}if(Array.isArray(data.chromatic)){state.chromaticHistory=data.chromatic.slice(-500).filter(x=>x&&typeof x.date==='string'&&CHROMATIC_PATTERNS.includes(x.pattern)&&Number.isFinite(x.bpm));localStorage.setItem('musiclab-chromatic-history',JSON.stringify(state.chromaticHistory));}if(Array.isArray(data.guitarSight)){state.guitarSightHistory=data.guitarSight.slice(-300).filter(x=>x&&Number.isFinite(x.accuracy)&&typeof x.date==='string');localStorage.setItem('musiclab-guitar-sight',JSON.stringify(state.guitarSightHistory));}if(Array.isArray(data.training)){state.earHistory=data.training.slice(-3000).filter(x=>x&&typeof x.date==='string'&&typeof x.kind==='string'&&typeof x.correct==='boolean');localStorage.setItem('musiclab-training-history',JSON.stringify(state.earHistory));}if(typeof data.voiceNotes==='string'){state.voiceNotes=data.voiceNotes.slice(0,1800);localStorage.setItem('musiclab-voice-notes',JSON.stringify(state.voiceNotes));}if(Number.isInteger(data.voiceTarget)&&data.voiceTarget>=48&&data.voiceTarget<=72){state.voiceTarget=data.voiceTarget;localStorage.setItem('musiclab-voice-target',JSON.stringify(state.voiceTarget));}state.stats={total:Math.max(0,Number(data.ear.total)||0),correct:Math.max(0,Number(data.ear.correct)||0)};saveEntries();localStorage.setItem('musiclab-ear',JSON.stringify(state.stats));render();alert('가져오기를 완료했습니다.');
+   studioStop();state.entries=data.entries;if([10,20,30].includes(data.practiceMinutes)){state.practiceMinutes=data.practiceMinutes;localStorage.setItem('musiclab-practice-minutes',JSON.stringify(state.practiceMinutes));}if(data.chromaticSettings){const c=data.chromaticSettings;if(CHROMATIC_PATTERNS.includes(c.pattern))state.chromaticPattern=c.pattern;if(Number.isInteger(c.bpm))state.chromaticBpm=Math.max(60,Math.min(120,c.bpm));saveChromaticSettings();}if(data.backing){state.backing=normalizeBacking(data.backing,16);backingPersist();}if(data.studio){try{state.studioProject=normalizeStudioProject(data.studio);state.studioRollPage=0;state.melodyNotes=state.studioProject.melody||[];persistStudio()}catch{}}if(Array.isArray(data.studioProjects)){state.studioProjects=data.studioProjects.slice(0,20).flatMap(x=>{try{return [{...normalizeStudioProject(x),backing:normalizeBacking(x.backing||state.backing,Math.max(1,Array.isArray(x.bars)?x.bars.length:4))}]}catch{return []}});localStorage.setItem('musiclab-studio-projects',JSON.stringify(state.studioProjects))}if(Array.isArray(data.harmonyHistory)){state.harmonyHistory=data.harmonyHistory.filter(x=>typeof x==='string').slice(-40);localStorage.setItem('musiclab-harmony-questions',JSON.stringify(state.harmonyHistory));}if(Array.isArray(data.quizHistory)){state.quizHistory=data.quizHistory.slice(-800).filter(x=>x&&typeof x.category==='string'&&typeof x.correct==='boolean'&&typeof x.seed==='number'&&typeof x.kind==='string');localStorage.setItem('musiclab-quiz096-history',JSON.stringify(state.quizHistory));}if(Array.isArray(data.quizRecent)){state.quizRecent=data.quizRecent.slice(-90).filter(x=>typeof x==='string');localStorage.setItem('musiclab-quiz096-recent',JSON.stringify(state.quizRecent));}if(Array.isArray(data.problemRecent)){state.problemRecent=data.problemRecent.filter(x=>typeof x==='string').slice(-50);localStorage.setItem('musiclab-problem-recent',JSON.stringify(state.problemRecent));}if(Array.isArray(data.guitarTheory)){state.theoryHistory=data.guitarTheory.slice(-500).filter(x=>x&&typeof x.date==='string'&&typeof x.root==='string'&&['caged','triad','arp','drop'].includes(x.mode));localStorage.setItem('musiclab-guitar-theory-history',JSON.stringify(state.theoryHistory));}if(Array.isArray(data.favoriteGrips)){state.libGripFavorites=data.favoriteGrips.slice(0,60).filter(g=>g&&typeof g.name==='string'&&Array.isArray(g.frets)&&g.frets.length===6&&g.frets.every(f=>f===null||(Number.isInteger(f)&&f>=0&&f<=22)));localStorage.setItem('musiclab-grip-favorites',JSON.stringify(state.libGripFavorites));}if(Array.isArray(data.favoriteChords)){state.libFavorites=data.favoriteChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,100);libraryFavoritesSave();}if(Array.isArray(data.recentChords)){state.libRecent=data.recentChords.filter(x=>typeof x==='string'&&x.length<=50).slice(0,12);localStorage.setItem('musiclab-lib-recent',JSON.stringify(state.libRecent));}if(Array.isArray(data.chromatic)){state.chromaticHistory=data.chromatic.slice(-500).filter(x=>x&&typeof x.date==='string'&&CHROMATIC_PATTERNS.includes(x.pattern)&&Number.isFinite(x.bpm));localStorage.setItem('musiclab-chromatic-history',JSON.stringify(state.chromaticHistory));}if(Array.isArray(data.guitarSight)){state.guitarSightHistory=data.guitarSight.slice(-300).filter(x=>x&&Number.isFinite(x.accuracy)&&typeof x.date==='string');localStorage.setItem('musiclab-guitar-sight',JSON.stringify(state.guitarSightHistory));}if(Array.isArray(data.training)){state.earHistory=data.training.slice(-3000).filter(x=>x&&typeof x.date==='string'&&typeof x.kind==='string'&&typeof x.correct==='boolean');localStorage.setItem('musiclab-training-history',JSON.stringify(state.earHistory));}if(typeof data.voiceNotes==='string'){state.voiceNotes=data.voiceNotes.slice(0,1800);localStorage.setItem('musiclab-voice-notes',JSON.stringify(state.voiceNotes));}if(Number.isInteger(data.voiceTarget)&&data.voiceTarget>=48&&data.voiceTarget<=72){state.voiceTarget=data.voiceTarget;localStorage.setItem('musiclab-voice-target',JSON.stringify(state.voiceTarget));}state.stats={total:Math.max(0,Number(data.ear.total)||0),correct:Math.max(0,Number(data.ear.correct)||0)};saveEntries();localStorage.setItem('musiclab-ear',JSON.stringify(state.stats));render();alert('가져오기를 완료했습니다.');
   }catch(err){alert('가져오기에 실패했습니다: '+err.message)}
  }
 });
@@ -905,11 +1027,11 @@ document.addEventListener('input',e=>{const t=e.target,k=t.dataset.slider;
  }});
 document.addEventListener('input',e=>{
  const key=e.target.dataset?.backingMix;
- if(!['drums','bass','piano'].includes(key))return;
+ if(!BACKING_PARTS.includes(key))return;
  const n=Math.min(100,Math.max(0,Number(e.target.value)||0));
  state.backing=normalizeBacking({...state.backing,mix:{...state.backing.mix,[key]:n}},ensureStudio().bars.length);
  const label=$('#backing-label-'+key);if(label)label.textContent=n+'%';
- if(backingPlayer)backingPlayer.setMix(state.backing.mix);
+ if(backingPlayer)backingPlayer.setSettings(state.backing);
  backingPersist();
 });
 document.addEventListener('submit',e=>{if(e.target.id!=='entry-form')return;e.preventDefault();const f=new FormData(e.target),minutes=Number(f.get('minutes'));if(!Number.isInteger(minutes)||minutes<1||minutes>600)return;

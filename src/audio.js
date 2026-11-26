@@ -34,24 +34,24 @@ function closeSample(mid){
  for(const m of sampleMidis){const delta=Math.abs(mid-m);if(delta<dist){nearest=m;dist=delta;}}
  return nearest;
 }
-function playBuffer(mid,buf,sourceMid,when,duration,volume){
+function playBuffer(mid,buf,sourceMid,when,duration,volume,destination){
  const ctx=context(),start=Math.max(ctx.currentTime+.012,when??ctx.currentTime+.015);
  const src=ctx.createBufferSource(),en=ctx.createGain();src.buffer=buf;
  src.playbackRate.value=2**((mid-sourceMid)/12);
  const v=Math.min(.65,Math.max(.005,volume??.22));
  en.gain.setValueAtTime(.00001,start);en.gain.linearRampToValueAtTime(v,start+.008);
  const tail=.24;en.gain.setValueAtTime(v,start+Math.max(.06,duration-.08));en.gain.exponentialRampToValueAtTime(.0001,start+duration+tail);
- src.connect(en);en.connect(ctx.destination);activeSources.add(src);src.onended=()=>activeSources.delete(src);
+ src.connect(en);en.connect(destination??ctx.destination);activeSources.add(src);src.onended=()=>activeSources.delete(src);
  src.start(start);src.stop(start+duration+tail+.03);
 }
-function synthFallback(mid,when,duration,volume){
+function synthFallback(mid,when,duration,volume,destination){
  const ctx=context(),t=Math.max(ctx.currentTime+.01,when??ctx.currentTime+.012),hz=midiToFrequency(mid);
  const v=volume??.13;
  for(let h=1;h<=6;h++){
   const osc=ctx.createOscillator(),env=ctx.createGain();osc.type='sine';osc.frequency.value=hz*h*(1+.0002*h*h);
   env.gain.setValueAtTime(.00001,t);env.gain.linearRampToValueAtTime(v*.40/Math.pow(h,1.75),t+.005);
   env.gain.exponentialRampToValueAtTime(.0001,t+duration+.3/h);
-  osc.connect(env);env.connect(ctx.destination);activeSources.add(osc);osc.onended=()=>activeSources.delete(osc);
+  osc.connect(env);env.connect(destination??ctx.destination);activeSources.add(osc);osc.onended=()=>activeSources.delete(osc);
   osc.start(t);osc.stop(t+duration+.4);
  }
 }
@@ -59,7 +59,7 @@ export function note(midi,when,duration=.58,opts={}){
  const m=Number(midi);if(!Number.isInteger(m)||m<20||m>110)return;
  context();if(!bootStarted)loadPianoSamples();
  const k=closeSample(m),buf=sampleBank.get(k);
- if(buf){playBuffer(m,buf,k,when,duration,opts.volume);return;}
+ if(buf){playBuffer(m,buf,k,when,duration,opts.volume,opts.destination);return;}
  // Play recorded audio as soon as it is decoded, even if this is the first touch.
  if(!inflight.has(k))fetchPiano(k);
  const timeOffset=(when??context().currentTime)-context().currentTime;
@@ -67,9 +67,9 @@ export function note(midi,when,duration=.58,opts={}){
  const retry=()=>{
   if(token!==playToken)return;
   const loaded=sampleBank.get(k);
-  if(loaded){playBuffer(m,loaded,k,context().currentTime+Math.max(.01,timeOffset),duration,opts.volume);return;}
+  if(loaded){playBuffer(m,loaded,k,context().currentTime+Math.max(.01,timeOffset),duration,opts.volume,opts.destination);return;}
   if(Date.now()<deadline&&inflight.has(k)){setTimeout(retry,45);return;}
-  synthFallback(m,undefined,duration,opts.volume);
+  synthFallback(m,undefined,duration,opts.volume,opts.destination);
  };
  retry();
 }

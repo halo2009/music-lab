@@ -36,7 +36,9 @@ export function pianoRollSVG(chords,melody=[],startBar=0){
   (chords[b]||[]).forEach(m=>{if(m<low||m>=high)return;let y=offY+(high-1-m)*rowH;
    chordNotes+=`<rect x="${offX+b*4*cellW+1}" y="${y+1}" width="${4*cellW-2}" height="${rowH-2}" rx="3" fill="var(--roll-chord)" opacity=".62"/>`;});
  }
- const placed=melody.filter(x=>x.step>=startBar*4&&x.step<(startBar+4)*4&&x.midi>=low&&x.midi<high).map(x=>{const y=offY+(high-1-x.midi)*rowH;return `<rect x="${offX+(x.step-startBar*4)*cellW+1}" y="${y+1}" width="${cellW-2}" height="${rowH-2}" rx="2" fill="var(--accent-strong)"/>`}).join('');
+ const placed=melody.filter(x=>x.step+(x.duration??1)>startBar*4&&x.step<(startBar+4)*4&&x.midi>=low&&x.midi<high).map(x=>{
+  const y=offY+(high-1-x.midi)*rowH,begin=Math.max(x.step,startBar*4),end=Math.min(x.step+(x.duration??1),(startBar+4)*4);
+  return `<rect x="${offX+(begin-startBar*4)*cellW+1}" y="${y+1}" width="${Math.max(1,(end-begin)*cellW-2)}" height="${rowH-2}" rx="2" fill="var(--accent-strong)"/>`}).join('');
  const grid=Array.from({length:17},(_,i)=>`<line x1="${offX+i*cellW}" y1="${offY}" x2="${offX+i*cellW}" y2="${offY+contentH}" stroke="var(--line)" stroke-width="${i%4===0?1.4:.6}"/>`).join('');
  return `<div class="piano-roll-scroll"><svg class="piano-roll-svg" viewBox="0 0 580 396" role="group" aria-label="피아노 롤: 격자를 눌러 멜로디 입력"><rect x="${offX}" y="${offY}" width="${contentW}" height="${contentH}" fill="var(--card2)"/>${rows.join('')}${bars}${grid}${chordNotes}${placed}<rect x="${offX}" y="${offY}" width="${contentW}" height="${contentH}" fill="transparent" data-action="roll-click"/></svg></div>`;
 }

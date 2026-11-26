@@ -3,7 +3,7 @@ import {newStudioProject,setStudioChord,splitSlot,addBar} from './src/studio-eng
 import {BACKING_STYLES,normalizeBacking,buildBackingPattern,startBackingTrack} from './src/backing-track.js';
 let p=newStudioProject('E','major',95);
 p=setStudioChord(p,0,0,'F#m7');p=setStudioChord(p,1,0,'B7');p=setStudioChord(p,2,0,'EM7');p=setStudioChord(p,3,0,'C#m7');
-assert.equal(Object.keys(BACKING_STYLES).length,5);
+assert.equal(Object.keys(BACKING_STYLES).length,9);
 for(const style of Object.keys(BACKING_STYLES)){
  const pat=buildBackingPattern(p,{style,loop:false,countIn:true,startBar:1,endBar:4});
  assert.equal(pat.beats,16);assert.equal(pat.bpm,95);
@@ -15,7 +15,7 @@ for(const style of Object.keys(BACKING_STYLES)){
 const short=buildBackingPattern(p,{style:'rnb',startBar:2,endBar:3,mix:{drums:100,bass:0,piano:60}});
 assert.equal(short.beats,8);assert.ok(short.events.every(x=>x.beat>=4&&x.beat<12));
 assert.deepEqual(normalizeBacking({style:'bad',startBar:-999,endBar:99,mix:{drums:150,bass:-20,piano:51}},4),
- {style:'pop',loop:true,countIn:true,startBar:1,endBar:4,mix:{drums:100,bass:0,piano:51}});
+ {style:'pop',loop:true,countIn:true,startBar:1,endBar:4,mix:{drums:100,bass:0,piano:51,guitar:55}});
 // Multiple chords per bar must appear at their correct beat, not only at bar boundaries.
 let p2=splitSlot(p,0,0);p2=setStudioChord(p2,0,1,'G#7');
 let events=buildBackingPattern(p2,{countIn:false,loop:false}).events;

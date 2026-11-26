@@ -32,6 +32,7 @@ export function generateGuitarSight({keyId='C-major',level=1,position=0,bars=2,r
  const key=keyById(keyId);let pool=poolFor(key,level,position);if(!pool.length)pool=poolFor(key,3,position);
  const middle=pool[Math.floor(pool.length/2)];
  let last=middle;
+ let lastPlace;
  const events=[];
  for(let bar=0;bar<bars;bar++){
   const rhythm=level===1?[1,1,1,1]:level===2?choose([[1,.5,.5,1,1],[1,1,2],[2,1,1]],rng):choose([[.5,.5,1,1,1],[1,.5,.5,.5,.5,1],[1,1,2],[.5,.5,.5,.5,.5,.5,.5,.5]],rng);
@@ -39,10 +40,15 @@ export function generateGuitarSight({keyId='C-major',level=1,position=0,bars=2,r
   for(const duration of rhythm){
    let candidates=pool.filter(m=>Math.abs(m-last)<=(level===1?4:level===2?7:12));
    if(!candidates.length)candidates=pool;
+   if(level===1&&candidates.length>1)candidates=candidates.filter(m=>m!==last);
    // Keep a reasonable melodic direction while permitting position changes.
    const midi=choose(candidates,rng);
    const options=placesForNote(midi,{position});
-   const place=options.sort((a,b)=>Math.abs(a.fret-(position||2))-Math.abs(b.fret-(position||2))||a.string-b.string)[0];
+   const cost=place=>lastPlace
+    ?Math.abs(place.fret-lastPlace.fret)+Math.abs(place.string-lastPlace.string)*.8
+    :Math.abs(place.fret-(position||2));
+   const place=options.sort((a,b)=>cost(a)-cost(b)||a.string-b.string)[0];
+   lastPlace=place;
    events.push({midi,bar,beat,duration,place:{...place}});last=midi;beat+=duration;
   }
  }

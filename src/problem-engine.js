@@ -28,6 +28,16 @@ export function makeEarProblem({mode='interval',clef='treble',level='chromatic',
   if(mode==='melody'){const subset=pool.filter(m=>Math.abs(m-base)<=7);const notes=[base,pick(subset),pick(subset)];return {kind:mode,notes,prompt:'세 음을 듣고 차례대로 건반을 눌러보세요.',signature:`${mode}|${clef}|${level}|${notes.join('.')}`,seed};}
   return {kind:mode,notes:[base],prompt:mode==='staff'?'소리를 듣고 피아노에서 같은 음을 찾아보세요.':'오선지를 보고 해당하는 건반을 선택하세요.',signature:`${mode}|${clef}|${level}|${base}`,seed};
  }
+ if(mode==='progression'){
+  const forms=[[[0,4,5,3],'I–V–vi–IV'],[[0,5,3,4],'I–vi–IV–V'],[[1,4,0,0],'ii–V–I–I'],[[0,3,1,4],'I–IV–ii–V']];
+  const [degrees,correct]=pick(forms);
+  const tonic=48+Math.floor(rng()*12);
+  const scale=[0,2,4,5,7,9,11];
+  const groups=degrees.map(degree=>[0,2,4].map(step=>{
+   const n=degree+step;return tonic+scale[n%7]+12*Math.floor(n/7);
+  }));
+  return {kind:mode,groups,correct,answers:shuffle(rng,forms.map(([,name])=>name)),prompt:'들린 네 화음의 로마숫자 진행을 고르세요.',signature:`progression|${tonic}|${correct}`,seed};
+ }
  if(mode==='direction'){const a=58+Math.floor(rng()*15),delta=pick([-7,-5,-4,-3,-2,-1,1,2,3,4,5,7]);return {kind:mode,a,b:a+delta,correct:delta>0?'높아짐':'낮아짐',answers:['높아짐','낮아짐'],prompt:'두 번째 음은 첫 번째 음보다?',signature:`direction|${a}|${delta}`,seed};}
  if(mode==='interval'){const target=pick(INTERVAL_QUIZ),others=shuffle(rng,INTERVAL_QUIZ.filter(x=>x.n!==target.n)).slice(0,3).map(x=>x.n),a=54+Math.floor(rng()*15);return {kind:mode,a,b:a+target.s,correct:target.n,answers:shuffle(rng,[target.n,...others]),prompt:'두 음 사이의 음정은?',signature:`interval|${a}|${target.s}`,seed};}
  const a=55+Math.floor(rng()*12),major=rng()>.5;return {kind:'quality',midis:[a,a+(major?4:3),a+7],correct:major?'장3화음':'단3화음',answers:['장3화음','단3화음'],prompt:'들리는 3화음의 종류는?',signature:`quality|${a}|${major}`,seed};

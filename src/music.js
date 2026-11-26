@@ -52,5 +52,5 @@ export const chordMidi=(root,mode,degree,seventh=true)=>{
 };
 export function fretPitch(openMidi,fret){return openMidi+fret}
 export const GUITAR_OPEN=[64,59,55,50,45,40]; // first to sixth string, screen top to bottom
-export const FORMATS={major:'메이저',minor:'내추럴 마이너',pentMajor:'메이저 펜타토닉',pentMinor:'마이너 펜타토닉',blues:'블루스',dorian:'도리안',mixolydian:'믹솔리디안'};
+export const FORMATS={major:'메이저',minor:'내추럴 마이너',pentMajor:'메이저 펜타토닉',pentMinor:'마이너 펜타토닉',blues:'블루스',dorian:'도리안',mixolydian:'믹솔리디안',harmonicMinor:'화성단음계',melodicMinor:'가락단음계 상행',phrygian:'프리지안',lydian:'리디안',locrian:'로크리안'};
 export const INTERVAL_QUIZ=[{n:'단2도',s:1},{n:'장2도',s:2},{n:'단3도',s:3},{n:'장3도',s:4},{n:'완전4도',s:5},{n:'증4도/감5도',s:6},{n:'완전5도',s:7},{n:'단6도',s:8},{n:'장6도',s:9},{n:'단7도',s:10},{n:'장7도',s:11},{n:'완전8도',s:12}];

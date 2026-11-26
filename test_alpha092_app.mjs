@@ -11,8 +11,9 @@ try{
  await import('./src/app.js');
  const click=(action,d={})=>events.get('click')({target:{closest(){return {dataset:{action,...d},disabled:false}}}});
  const change=(id,value)=>events.get('change')({target:{id,value}});
- assert.match(app.innerHTML,/BETA 2/);
+ assert.match(app.innerHTML,/BETA 3[.]0 RC/);
  click('nav-compose');assert.match(app.innerHTML,/CHORD STUDIO 2\.0/);assert.match(app.innerHTML,/BAR 04/);
+ fields.set('#studio-youtube-url',{value:'https://youtu.be/TbtHKC1fUEA?t=75'});click('studio-youtube-load');assert.match(app.innerHTML,/embed\/TbtHKC1fUEA[?]start=75/);click('studio-youtube-close');assert.doesNotMatch(app.innerHTML,/studio-youtube-frame/);
  click('studio-add-bar');assert.match(app.innerHTML,/BAR 05/);
  click('studio-split');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments.length,2);
  fields.set('#studio-code',{value:'BbM7'});click('studio-set-code');assert.equal(JSON.parse(memory.get('musiclab-studio-active')).bars[0].segments[0].symbol,'BbM7');
